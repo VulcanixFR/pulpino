@@ -65,13 +65,13 @@ if not vars().has_key('server'):
     [server, group, remote] = find_server()
 
 # download IPApproX tools in ./ipstools and import them
-if os.path.exists("ipstools") and os.path.isdir("ipstools"):
+# if os.path.exists("ipstools") and os.path.isdir("ipstools"):
     # cwd = os.getcwd()
     # os.chdir("ipstools")
     # execute("git pull origin verilator-pulpino", silent=True)
     # os.chdir(cwd)
-    import ipstools
-else:
+    # import ipstools
+# else:
     # try to find the ipstools repository
     #if "http" in remote:
     #    if execute("git clone %s/IPApproX.git ipstools -b verilator-pulpino" % (remote)) != 0:
@@ -80,10 +80,10 @@ else:
     #    if execute("git clone %s/IPApproX.git ipstools -b verilator-pulpino" % (remote)) != 0:
     #        execute("git clone %s:pulp-tools/IPApproX.git ipstools -b verilator-pulpino" % (server))
 
-    execute("git submodule init")
-    execute("git pull --recurse-submodules")
+execute("git submodule init")
+execute("git submodule update --init --recursive")
 
-    import ipstools
+import ipstools
 
 # creates an IPApproX database
 ipdb = ipstools.IPDatabase(ips_dir="./ips", skip_scripts=True)
