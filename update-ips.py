@@ -55,7 +55,7 @@ def find_server():
 
 if len(sys.argv) > 1:
     server = sys.argv[1]
-    group  = "pulp-project"
+    group  = "pulp-open"
     if "http" in server:
         remote = "%s/%s" % (server, group)
     else:
@@ -64,31 +64,31 @@ if len(sys.argv) > 1:
 if not vars().has_key('server'):
     [server, group, remote] = find_server()
 
-print "Using remote git server %s, remote is %s" % (server, remote)
-
-
 # download IPApproX tools in ./ipstools and import them
-if os.path.exists("ipstools") and os.path.isdir("ipstools"):
-    cwd = os.getcwd()
-    os.chdir("ipstools")
-    execute("git pull", silent=True)
-    os.chdir(cwd)
-    import ipstools
-else:
+# if os.path.exists("ipstools") and os.path.isdir("ipstools"):
+    # cwd = os.getcwd()
+    # os.chdir("ipstools")
+    # execute("git pull origin verilator-pulpino", silent=True)
+    # os.chdir(cwd)
+    # import ipstools
+# else:
     # try to find the ipstools repository
-    if "http" in remote:
-        if execute("git clone %s/IPApproX.git ipstools" % (remote)) != 0:
-            execute("git clone %s/pulp-tools/IPApproX.git ipstools" % (server))
-    else:
-        if execute("git clone %s/IPApproX.git ipstools" % (remote)) != 0:
-            execute("git clone %s:pulp-tools/IPApproX.git ipstools" % (server))
+    #if "http" in remote:
+    #    if execute("git clone %s/IPApproX.git ipstools -b verilator-pulpino" % (remote)) != 0:
+    #        execute("git clone %s/pulp-tools/IPApproX.git ipstools -b verilator-pulpino" % (server))
+    #else:
+    #    if execute("git clone %s/IPApproX.git ipstools -b verilator-pulpino" % (remote)) != 0:
+    #        execute("git clone %s:pulp-tools/IPApproX.git ipstools -b verilator-pulpino" % (server))
 
-    import ipstools
+execute("git submodule init")
+execute("git submodule update --init --recursive")
+
+import ipstools
 
 # creates an IPApproX database
 ipdb = ipstools.IPDatabase(ips_dir="./ips", skip_scripts=True)
 # updates the IPs from the git repo
-ipdb.update_ips(remote = remote)
+ipdb.update_ips(remote = "https://github.com/pulp-platform")
 
 # launch generate-ips.py
 execute("./generate-scripts.py")
