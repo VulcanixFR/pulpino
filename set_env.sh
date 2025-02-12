@@ -76,13 +76,14 @@ fi
 cd $ROOT_DIR
 
 # Synchronisation des ips
-if [ ! -d $ROOT_DIR/ipstools ] ; then
+if [ ! -d $ROOT_DIR/ips/riscv ] ; then
 	echo "Updating IPs"
     exec ./update-ips.py
+    exec ./generate-scripts.py
 fi	
 
 # Installation du compilateur si manquant
-if [ ! -d $ROOT_DIR/.bin ] ; then
+if [ ! -d $ROOT_DIR/.bin/bin ] ; then
 	echo "Extracting RI5CY Toolchain"
 	mkdir -p $ROOT_DIR/.bin
 	tar -xzvf $ROOT_DIR/tools/ri5cy_toolchain.tar.gz --strip-components=1 -C .bin installed_ri5cy/

@@ -9,20 +9,23 @@ un disque de la machine et non dans un répertoire réseau.
 
 Il vous faudra aussi récupérer les exécutables pour le compilateur ri5cy. Les instructions pour créer l'archive seront décrites dans (pas encore écrites). Placez l'archive dans le dossier tools. 
 
+`cpan` `yes` `yes` `install Switch` `exit`
+
 Pour utiliser ce répertoire, exécutez `source set_env.sh`.
 
 ## Simulations
 
 Pour simuler des programmes, entrez dans le dosser `simu` et
-exécutez le script `cmake_configure.riscv.gcc.sh`.
+exécutez le script `source cmake_configure.riscv.gcc.sh`.
 
-Vous pourrez vous réferrer aux instructions 
+Vous pourrez vous référer aux instructions 
 [ci-dessous](#running-simulations)
 pour plus de détails quand aux commandes liées à la simulation.
 
 Pour ajouter un programme à simuler, ... (copier des instructions pour le D-RI5CY).
 
 # README d'origine
+> pue salement sa grand-mère !
 
 <img src="https://raw.githubusercontent.com/pulp-platform/pulpino/master/doc/datasheet/figures/pulpino_logo_inline1.png" width="400px" />
 

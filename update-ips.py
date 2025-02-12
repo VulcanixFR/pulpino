@@ -91,4 +91,4 @@ ipdb = ipstools.IPDatabase(ips_dir="./ips", skip_scripts=True)
 ipdb.update_ips(remote = "https://github.com/pulp-platform")
 
 # launch generate-ips.py
-execute("./generate-scripts.py")
+# execute("./generate-scripts.py")
