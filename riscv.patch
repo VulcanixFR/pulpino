@@ -493,10 +493,10 @@ index 8de09fa..4dbaabc 100644
    end
  
 diff --git a/decoder.sv b/decoder.sv
-index 3144e21..63310c9 100644
+index 3144e21..77d2a48 100644
 --- a/decoder.sv
 +++ b/decoder.sv
-@@ -269,44 +269,61 @@ module riscv_decoder
+@@ -269,44 +269,63 @@ module riscv_decoder
  
        OPCODE_STORE,
        OPCODE_STORE_POST: begin
@@ -505,7 +505,7 @@ index 3144e21..63310c9 100644
 -        rega_used_o    = 1'b1;
 -        regb_used_o    = 1'b1;
 -        alu_operator_o = ALU_ADD;
-+        if(instr_rdata_i[14:12] != 3'b111) begin
++        if(instr_rdata_i[14:12] != 3'b111) begin // ¬ p.spsw
 +          data_req       = 1'b1;
 +          data_we_o      = 1'b1;
 +          rega_used_o    = 1'b1;
@@ -547,10 +547,7 @@ index 3144e21..63310c9 100644
 +            end
 +          endcase
 +        end else begin
-+          data_req       = 1'b1;
-+          rega_used_o    = 1'b1;
-+          regb_used_o    = 1'b1;
-+          alu_operator_o = ALU_ADD;
++          // p.spsw
  
 -        // post-increment setup
 -        if (instr_rdata_i[6:0] == OPCODE_STORE_POST) begin
@@ -558,6 +555,11 @@ index 3144e21..63310c9 100644
 -          regfile_alu_waddr_sel_o = 1'b0;
 -          regfile_alu_we          = 1'b1;
 -        end
++          data_req       = 1'b1;
++          rega_used_o    = 1'b1;
++          regb_used_o    = 1'b1;
++          alu_operator_o = ALU_ADD;
++
 +          // pass write data through ALU operand c
 +          alu_op_c_mux_sel_o = OP_C_REGB_OR_FWD;
  
@@ -589,7 +591,7 @@ index 3144e21..63310c9 100644
        end
  
        OPCODE_LOAD,
-@@ -432,175 +449,177 @@ module riscv_decoder
+@@ -432,175 +451,178 @@ module riscv_decoder
        end
  
        OPCODE_OP: begin  // Register-Register ALU operation
@@ -621,10 +623,7 @@ index 3144e21..63310c9 100644
 -              regc_used_o         = 1'b1;
 -              regc_mux_o          = REGC_RD;
 -            end
-+        if(instr_rdata_i[31:25] != 7'b1011010) begin
-+          regfile_alu_we = 1'b1;
-+          rega_used_o    = 1'b1;
- 
+-
 -            3'b011: begin alu_operator_o = ALU_BCLR; end
 -            3'b100: begin alu_operator_o = ALU_BSET; end
 -
@@ -713,7 +712,11 @@ index 3144e21..63310c9 100644
 -              rega_used_o        = 1'b0;
 -              alu_operator_o = ALU_REMU;
 -            end
--
++        // Avec cette implémentation, p.set est l'équivalent d'un nop
++        if(instr_rdata_i[31:25] != 7'b1011010) begin // ¬ p.set
++          regfile_alu_we = 1'b1;
++          rega_used_o    = 1'b1;
+ 
 -            // PULP specific instructions
 -            {6'b10_0001, 3'b000}: begin // p.mac
 -              regc_used_o     = 1'b1;
@@ -935,7 +938,7 @@ index 3144e21..63310c9 100644
          end
        end
  
-@@ -818,7 +837,6 @@ module riscv_decoder
+@@ -818,7 +840,6 @@ module riscv_decoder
          endcase
        end
  
@@ -943,7 +946,7 @@ index 3144e21..63310c9 100644
        ////////////////////////////////////////////////
        //  ____  ____  _____ ____ ___    _    _      //
        // / ___||  _ \| ____/ ___|_ _|  / \  | |     //
-@@ -991,8 +1009,8 @@ module riscv_decoder
+@@ -991,8 +1012,8 @@ module riscv_decoder
    assign regfile_alu_we_o  = (deassert_we_i) ? 1'b0          : regfile_alu_we;
    assign data_req_o        = (deassert_we_i) ? 1'b0          : data_req;
    assign hwloop_we_o       = (deassert_we_i) ? 3'b0          : hwloop_we;
@@ -21349,10 +21352,10 @@ index 0000000..fd2e95b
 +endmodule
 diff --git a/mode_tag.sv b/mode_tag.sv
 new file mode 100644
-index 0000000..c45515d
+index 0000000..0b973cd
 --- /dev/null
 +++ b/mode_tag.sv
-@@ -0,0 +1,244 @@
+@@ -0,0 +1,245 @@
 +////////////////////////////////////////////////////////////////////////////////
 +// Engineer        Christian Palmiero - cp3025@columbia.edu                   //
 +//                                                                            //
@@ -21496,9 +21499,10 @@ index 0000000..c45515d
 +      end
 +
 +      OPCODE_OP: begin
-+        if(instr_rdata_i[31:25] == 7'b1011010) begin
-+          register_set_o = 1'b1;
-+        end else begin
++        if(instr_rdata_i[31:25] == 7'b1011010) begin // p.set
++          // Indique de mettre le bit de tag de rd à 1
++          register_set_o = 1'b1; 
++        end else begin                               // ¬ p.set
 +          unique case (instr_rdata_i[14:12])
 +            3'b000: begin
 +              unique case (instr_rdata_i[31:25])

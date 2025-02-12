@@ -5,6 +5,7 @@ set FPGA_RTL ../rtl
 
 # components
 set SRC_COMPONENTS " \
+   $RTL/components/BRAM_8192x2.v \
    $RTL/components/cluster_clock_gating.sv \
    $RTL/components/cluster_clock_inverter.sv \
    $RTL/components/cluster_clock_mux2.sv \
@@ -13,6 +14,8 @@ set SRC_COMPONENTS " \
    $RTL/components/pulp_clock_mux2.sv \
    $RTL/components/generic_fifo.sv \
    $RTL/components/sp_ram.sv \
+   $RTL/components/sp_ram_tag.sv \
+   $RTL/components/xil_block_ram_8192x4b_1w1r.v \
 "
 
 # pulpino
@@ -26,6 +29,7 @@ set SRC_PULPINO " \
    $RTL/axi_mem_if_SP_wrap.sv \
    $RTL/core_region.sv \
    $RTL/instr_ram_wrap.sv \
+   $RTL/sp_instr_ram_wrap.sv \
    $RTL/sp_ram_wrap.sv \
    $RTL/boot_code.sv \
    $RTL/boot_rom_wrap.sv \
