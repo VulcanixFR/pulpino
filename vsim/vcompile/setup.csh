@@ -13,5 +13,6 @@ setenv MSIM_LIBS_PATH ${VSIM_PATH}/modelsim_libs
 setenv IPS_PATH       ${PULP_PATH}/ips
 setenv RTL_PATH       ${PULP_PATH}/rtl
 setenv TB_PATH        ${PULP_PATH}/tb
+setenv FPAG_PATH      ${PULP_PATH}/fpga
 
 source ${PULP_PATH}/vsim/vcompile/colors.csh

@@ -1,7 +1,9 @@
 source tcl_files/config/vsim_ips.tcl
 
-set cmd "vsim -quiet $TB \
+set cmd "vsim -quiet $TB\
   -L pulpino_lib \
+  -L unisim \
+  -L unisims_ver \
   $VSIM_IP_LIBS \
   +nowarnTRAN \
   +nowarnTSCALE \

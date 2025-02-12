@@ -29,3 +29,5 @@
 `endif
 
 `endif
+
+`define DIFT 1

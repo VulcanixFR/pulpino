@@ -5,14 +5,7 @@ imperio
 .bin
 tools/*
 
-simu/apps
-simu/apps/*
-simu/libs
-simu/libs/*
-simu/*.cmake
-simu/Makefile
-simu/CMakeFiles
-simu/CMakeFiles/*
-simu/CMakeCache.txt
+simu/*
+simu
 
 vsim/xilinx_libs/*

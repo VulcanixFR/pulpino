@@ -77,7 +77,6 @@ module core_region
   logic [31:0]  core_data_rdata;
   logic [31:0]  core_data_wdata;
 
-
   // signals to/from AXI mem
   logic                        is_axi_addr;
   logic                        axi_mem_req;
@@ -95,7 +94,6 @@ module core_region
   logic [AXI_DATA_WIDTH-1:0]   axi_instr_rdata;
   logic [AXI_DATA_WIDTH-1:0]   axi_instr_wdata;
 
-
   // signals to/from instr mem
   logic                        instr_mem_en;
   logic [INSTR_ADDR_WIDTH-1:0] instr_mem_addr;
@@ -112,8 +110,6 @@ module core_region
   logic [AXI_DATA_WIDTH-1:0]   data_mem_rdata;
   logic [AXI_DATA_WIDTH-1:0]   data_mem_wdata;
 
-
-
   enum logic [0:0] { AXI, RAM } lsu_resp_CS, lsu_resp_NS;
 
   // signals to/from core2axi
@@ -125,6 +121,17 @@ module core_region
   logic [3:0]   core_axi_be;
   logic [31:0]  core_axi_rdata;
   logic [31:0]  core_axi_wdata;
+
+`ifdef DIFT
+  logic         core_lsu_gnt_tag;
+  logic         core_lsu_we_tag;
+  logic [3:0]   core_lsu_rdata_tag;
+  logic         core_lsu_wdata_tag;
+  logic         core_lsu_rvalid_tag;
+  logic         core_data_we_tag;
+  logic         core_data_wdata_tag;
+  logic [3:0]   core_data_rdata_tag;
+`endif
 
   AXI_BUS
   #(
@@ -170,6 +177,13 @@ module core_region
     .data_gnt_i      ( core_lsu_gnt      ),
     .data_rvalid_i   ( core_lsu_rvalid   ),
     .data_err_i      ( 1'b0              ),
+`ifdef DIFT
+    .data_gnt_i_tag    ( core_lsu_gnt_tag    ),
+    .data_rdata_i_tag  ( core_lsu_rdata_tag  ),
+    .data_rvalid_i_tag ( core_lsu_rvalid_tag ),
+    .data_we_o_tag     ( core_lsu_we_tag     ),
+    .data_wdata_o_tag  ( core_lsu_wdata_tag  ),
+`endif
 
     .irq_i           ( irq_i             ),
 
@@ -252,6 +266,11 @@ module core_region
   assign core_data_be    = core_lsu_be;
   assign core_data_wdata = core_lsu_wdata;
 
+`ifdef DIFT
+  assign core_data_we_tag    = core_lsu_we_tag;
+  assign core_data_wdata_tag = core_lsu_wdata_tag;
+`endif
+
   assign core_axi_addr   = core_lsu_addr;
   assign core_axi_we     = core_lsu_we;
   assign core_axi_be     = core_lsu_be;
@@ -268,17 +287,26 @@ module core_region
   // figure out where the next response will be coming from
   always_comb
   begin
-    lsu_resp_NS = lsu_resp_CS;
+    lsu_resp_NS  = lsu_resp_CS;
     core_lsu_gnt = 1'b0;
+
+`ifdef DIFT
+    core_lsu_gnt_tag = 1'b0;
+`endif
 
     if (core_axi_req)
     begin
       core_lsu_gnt = core_axi_gnt;
-      lsu_resp_NS = AXI;
+      lsu_resp_NS  = AXI;
     end
     else if (core_data_req)
     begin
       core_lsu_gnt = core_data_gnt;
+
+`ifdef DIFT
+      core_lsu_gnt_tag = core_data_gnt;
+`endif
+
       lsu_resp_NS = RAM;
     end
   end
@@ -287,6 +315,10 @@ module core_region
   assign core_lsu_rdata  = (lsu_resp_CS == AXI) ? core_axi_rdata : core_data_rdata;
   assign core_lsu_rvalid = core_axi_rvalid | core_data_rvalid;
 
+`ifdef DIFT
+  assign core_lsu_rdata_tag  = (lsu_resp_CS == AXI) ? 4'h0 : core_data_rdata_tag;
+  assign core_lsu_rvalid_tag = core_data_rvalid;
+`endif
 
 
   //----------------------------------------------------------------------------//
@@ -385,15 +417,22 @@ module core_region
   )
   data_mem
   (
-    .clk          ( clk            ),
-    .rstn_i       ( rst_n          ),
-    .en_i         ( data_mem_en    ),
-    .addr_i       ( data_mem_addr  ),
-    .wdata_i      ( data_mem_wdata ),
-    .rdata_o      ( data_mem_rdata ),
-    .we_i         ( data_mem_we    ),
-    .be_i         ( data_mem_be    ),
-    .bypass_en_i  ( testmode_i     )
+    .clk         ( clk                 ),
+    .rstn_i      ( rst_n               ),
+    .en_i        ( data_mem_en         ),
+    .addr_i      ( data_mem_addr       ),
+    .wdata_i     ( data_mem_wdata      ),
+    .rdata_o     ( data_mem_rdata      ),
+    .we_i        ( data_mem_we         ),
+    .be_i        ( data_mem_be         ),
+
+`ifdef DIFT
+    .we_i_tag    ( core_data_we_tag    ),
+    .wdata_i_tag ( core_data_wdata_tag ),
+    .rdata_o_tag ( core_data_rdata_tag ),
+`endif
+
+    .bypass_en_i ( testmode_i          )
   );
 
   axi_mem_if_SP_wrap
