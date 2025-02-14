@@ -40,20 +40,28 @@ Pour utiliser ce répertoire, exécutez `source set_env.sh`. Afin de récupérer
 d'éventuelles modifications ou d'effectuer vous-même des modifications dans le
 dossier *ips/riscv*, vous devrez exécuter le script `./restore.sh`. A la fin de
 votre session de travail vous devrez enregistrer vos modifications sur ce
-dossier via le script `./save.sh` avant de commit et de push via git.
+dossier via le script `./save.sh` avant de commit et de push via git. \
 **/!\ Attention** : Cette technique ne permet pas une modification en parallèle
 du dossier *ips/riscv*. Veillez à être le seul à travailler sur ce dossier.
 
 ## Simulations
 
 Pour simuler des programmes, entrez dans le dosser `simu` et
-exécutez le script `source cmake_configure.riscv.gcc.sh`.
+exécutez le script
+
+    source cmake_configure.riscv.gcc.sh
+
+Pour ajouter un programme à simuler, exécuter la commande 
+
+    make vcompile
+
+puis compilez le programme (ici un exemple avec HelloWorld) :
+
+    make HelloWorld.vsim
 
 Vous pourrez vous référer aux instructions 
 [ci-dessous](#running-simulations)
 pour plus de détails quand aux commandes liées à la simulation.
-
-Pour ajouter un programme à simuler, ... (copier des instructions pour le D-RI5CY).
 
 # README d'origine
 
