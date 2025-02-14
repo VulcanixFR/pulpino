@@ -20226,7 +20226,7 @@ index 60d181d..b50d8db 100644
  
    assign if_ready_o = valid & id_ready_i;
 diff --git a/include/riscv_config.sv b/include/riscv_config.sv
-index 7137bae..227b004 100644
+index 7137bae..6525397 100644
 --- a/include/riscv_config.sv
 +++ b/include/riscv_config.sv
 @@ -28,3 +28,6 @@
@@ -20235,7 +20235,7 @@ index 7137bae..227b004 100644
  `endif
 +
 +//Ligne ci-dessous à commenter lors d'une compilation du RI5CY seul
-+`define DIFT 1
++// // `define DIFT 1
 diff --git a/include/riscv_defines.sv b/include/riscv_defines.sv
 index 7a83e27..7b56880 100644
 --- a/include/riscv_defines.sv
