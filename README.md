@@ -1,17 +1,48 @@
 # Projet RISC-V pour la Sécurité 
 
-... (Contexte)
+## Extension du DIFT à la sécurisation de la mémoire via un système de hiérarchie
+
+Le principe de notre projet consiste à étendre les capacités du processeur
+D-RI5CY développé par Christian Palmiero et al. en 2018. Ce processeur est une
+base de processeur RI5CY  sur laquelle a été ajouté un DIFT in-core permettant
+de contrôler et propager des tags sur les données et d’empêcher l’exécution du
+programme lorsque certaines données dites « malicieuses » sont détectées. Ce
+système permet de se prémunir des attaques software à base de buffer overflow et
+de format string.
+Nous nous proposons d’améliorer ce système en reprenant le principe de tag pour
+protéger la mémoire via un système de hiérarchie. Nous ajouterions un tag sur
+chaque mot stocké en mémoire, qui définirait un niveau d’accès à ce mot. Par
+exemple, avec un tag hiérarchique de 2 bits : 
+	- 3 - mémoire critique (bootloader) ;
+	- 2 - mémoire du système d'exploitation (noyau) ;
+	- 1 - mémoire accessible par les processus et threads (utilisateur) ;
+	- 0 - mémoire externe/non sécurisée.
+
+
+## Première installation
+
+Il est préférable de travailler dans un dossier présent sur
+un disque de la machine et non dans un répertoire réseau, car ce dernier est
+parfois trop lent pour décompresser les fichiers.
+
+Après avoir cloné ce répertoire dans un dossier local, il vous faudra aussi
+récupérer les exécutables pour le compilateur ri5cy. Les instructions pour créer
+l'archive seront décrites dans (pas encore écrites).
+Placez l'archive dans le dossier tools.
+
+Il vous faudra ensuite installer le module Switch dans Perl pour permettre le
+bon fonctionnement de Questasim. Pour cela, tapez `cpan` dans la console, puis
+`yes`, `yes`, `install Switch` et enfin `exit`.
 
 ## Utilisation
 
-Il est préférable de travailler dans un dossier présent sur
-un disque de la machine et non dans un répertoire réseau.
-
-Il vous faudra aussi récupérer les exécutables pour le compilateur ri5cy. Les instructions pour créer l'archive seront décrites dans (pas encore écrites). Placez l'archive dans le dossier tools. 
-
-`cpan` `yes` `yes` `install Switch` `exit`
-
-Pour utiliser ce répertoire, exécutez `source set_env.sh`.
+Pour utiliser ce répertoire, exécutez `source set_env.sh`. Afin de récupérer
+d'éventuelles modifications ou d'effectuer vous-même des modifications dans le
+dossier *ips/riscv*, vous devrez exécuter le script `./restore.sh`. A la fin de
+votre session de travail vous devrez enregistrer vos modifications sur ce
+dossier via le script `./save.sh` avant de commit et de push via git.
+**/!\ Attention** : Cette technique ne permet pas une modification en parallèle
+du dossier *ips/riscv*. Veillez à être le seul à travailler sur ce dossier.
 
 ## Simulations
 
@@ -25,7 +56,6 @@ pour plus de détails quand aux commandes liées à la simulation.
 Pour ajouter un programme à simuler, ... (copier des instructions pour le D-RI5CY).
 
 # README d'origine
-> pue salement sa grand-mère !
 
 <img src="https://raw.githubusercontent.com/pulp-platform/pulpino/master/doc/datasheet/figures/pulpino_logo_inline1.png" width="400px" />
 
