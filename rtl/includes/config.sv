@@ -31,4 +31,4 @@
 `endif
 
 //Ligne ci-dessous à commenter lors d'une compilation du RI5CY seul
-// `define DIFT 1
+`define DIFT 1
