@@ -33,7 +33,7 @@
 
 #define BUFSIZE 16
 #define OVERFLOWSIZE 256
-// // #define DIFT
+#define DIFT
 
 int base_pointer_offset;
 long overflow_buffer[OVERFLOWSIZE];

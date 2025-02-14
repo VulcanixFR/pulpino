@@ -44,6 +44,21 @@ dossier via le script `./save.sh` avant de commit et de push via git. \
 **/!\ Attention** : Cette technique ne permet pas une modification en parallèle
 du dossier *ips/riscv*. Veillez à être le seul à travailler sur ce dossier.
 
+## Choix du processeur
+
+Palmiero ayant ajouté ses modifications entre des balises, il est possible de
+compiler le processeur RI5CY en ignorant les ajouts du DIFT. Pour automatiser
+cela, nous avons écrit deux scripts bash qui permettent de passer d'un
+processeur à l'autre.
+
+    ./D-RI5CY_to_RI5CY.sh
+
+permet de passer du processeur D-RI5CY au processeur RI5CY.
+
+    ./RI5CY_to_D-RI5CY.sh
+
+permet de passer du processeur RI5CY au processeur D-RI5CY.
+
 ## Simulations
 
 Pour simuler des programmes, entrez dans le dosser `simu` et exécutez le script

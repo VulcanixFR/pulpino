@@ -1,8 +1,8 @@
 #!/bin/bash
 #fichier généré à l'aide de ChatGPT 4o
 
-# Fonction pour commenter une ligne spécifique dans un fichier
-comment_specific_line() {
+# Fonction pour décommenter une ligne spécifique dans un fichier
+uncomment_specific_line() {
     local file="$1"
     local search_pattern="$2"
     local comment_symbol="$3"
@@ -12,9 +12,10 @@ comment_specific_line() {
 
     # Lire chaque ligne du fichier
     while IFS= read -r line; do
-        # Vérifier si la ligne contient le motif de recherche et n'est pas déjà commentée
-        if [[ "$line" == *"$search_pattern"* && "$line" != "$comment_symbol"* ]]; then
-            echo "${comment_symbol} ${line}" >> "$temp_file"
+        # Vérifier si la ligne contient le motif de recherche et est commentée
+        if [[ "$line" == "$comment_symbol"*"$search_pattern"* ]]; then
+            # Supprimer le symbole de commentaire
+            echo "${line#$comment_symbol }" >> "$temp_file"
         else
             echo "$line" >> "$temp_file"
         fi
@@ -24,7 +25,7 @@ comment_specific_line() {
     mv "$temp_file" "$file"
 }
 
-# Motif de recherche pour la ligne à commenter
+# Motif de recherche pour la ligne à décommenter
 search_pattern="define DIFT"
 
 # Liste des fichiers à modifier
@@ -35,15 +36,15 @@ files_to_modify=(
     # Ajoute d'autres fichiers ici
 )
 
-# Parcourir chaque fichier et commenter la ligne spécifique
+# Parcourir chaque fichier et décommenter la ligne spécifique
 for file in "${files_to_modify[@]}"; do
     if [[ -f "$file" ]]; then
         case "$file" in
             *.c|*.h)
-                comment_specific_line "$file" "$search_pattern" "//"
+                uncomment_specific_line "$file" "$search_pattern" "//"
                 ;;
             *.v|*.sv)
-                comment_specific_line "$file" "$search_pattern" "//"
+                uncomment_specific_line "$file" "$search_pattern" "//"
                 ;;
         esac
     else
@@ -51,4 +52,4 @@ for file in "${files_to_modify[@]}"; do
     fi
 done
 
-echo "Les lignes spécifiques ont été commentées dans les fichiers spécifiés."
+echo "Les lignes spécifiques ont été décommentées dans les fichiers spécifiés."
