@@ -57,7 +57,7 @@ Pour ajouter un programme à simuler, exécuter la commande
 
 puis compilez le programme (ici un exemple avec HelloWorld) :
 
-    make HelloWorld.vsim
+    make helloWorld.vsim
 
 Vous pourrez vous référer aux instructions 
 [ci-dessous](#running-simulations)
