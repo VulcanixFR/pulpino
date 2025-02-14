@@ -2,7 +2,7 @@
 
 export BOARD="zybo"
 
-# Mise en place de l'arboréscence
+# Mise en place de l'arborescence
 export ROOT_DIR=$(pwd)
 
 df . | grep /dev > /dev/null

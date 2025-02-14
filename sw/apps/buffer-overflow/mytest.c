@@ -30,6 +30,7 @@
 #include <stdlib.h>
 #include <setjmp.h>
 #include <string.h>
+#include <stdint.h>
 
 #define BUFSIZE 16
 #define OVERFLOWSIZE 256
@@ -490,10 +491,20 @@ void vuln_bss_function_ptr(int choice) { /* Attack forms 2(a) and 4(c) */
 /*****************************************************************/
 /*                          main()                               */
 /*****************************************************************/
+__attribute__((optimize("align-functions=8")))
+void it (void) {
+  printf("Magnifique Tintin, vous etes un ananas !");
+} 
 
 int main (int argc, char **argv) {
   int choice;
   
+  uint32_t* mtvec = 0x305;
+  printf("MTVEC : %x\r\n", *mtvec);
+  
+  *mtvec = &it;
+  printf("MTVEC : %x\r\n", *mtvec);
+
   base_pointer_offset = 4;
 
   choice = 1;
