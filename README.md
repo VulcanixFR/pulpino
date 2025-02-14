@@ -13,10 +13,10 @@ Nous nous proposons d’améliorer ce système en reprenant le principe de tag p
 protéger la mémoire via un système de hiérarchie. Nous ajouterions un tag sur
 chaque mot stocké en mémoire, qui définirait un niveau d’accès à ce mot. Par
 exemple, avec un tag hiérarchique de 2 bits : 
-	- 3 - mémoire critique (bootloader) ;
-	- 2 - mémoire du système d'exploitation (noyau) ;
-	- 1 - mémoire accessible par les processus et threads (utilisateur) ;
-	- 0 - mémoire externe/non sécurisée.
+- 3 - mémoire critique (bootloader) ;
+- 2 - mémoire du système d'exploitation (noyau) ;
+- 1 - mémoire accessible par les processus et threads (utilisateur) ;
+- 0 - mémoire externe/non sécurisée.
 
 
 ## Première installation
