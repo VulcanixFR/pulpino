@@ -46,18 +46,17 @@ du dossier *ips/riscv*. Veillez à être le seul à travailler sur ce dossier.
 
 ## Simulations
 
-Pour simuler des programmes, entrez dans le dosser `simu` et
-exécutez le script
+Pour simuler des programmes, entrez dans le dosser `simu` et exécutez le script
 
     source cmake_configure.riscv.gcc.sh
 
-Pour ajouter un programme à simuler, exécuter la commande 
+Pour ajouter un programme à simuler, exécutez la commande 
 
     make vcompile
 
-puis compilez le programme (ici un exemple avec HelloWorld) :
+puis compilez le programme (ici un exemple avec helloworld) :
 
-    make helloWorld.vsim
+    make helloworld.vsim
 
 Vous pourrez vous référer aux instructions 
 [ci-dessous](#running-simulations)
