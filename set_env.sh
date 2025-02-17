@@ -16,7 +16,8 @@ fi
 export PATH=$ROOT_DIR/.bin/bin:$PATH
 
 # Choix de la version de Vivado
-export VIVADO_ROOT=/softslin/vivado_21.1/Vivado/2021.1
+# export VIVADO_ROOT=/softslin/vivado_21.1/Vivado/2021.1
+export VIVADO_ROOT=/softslin/vivado_15.1/Vivado/2015.1
 source $VIVADO_ROOT/settings64.sh
 export VIVADO_LIBS=$VIVADO_ROOT/data
 

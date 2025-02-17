@@ -34,6 +34,61 @@ Il vous faudra ensuite installer le module Switch dans Perl pour permettre le
 bon fonctionnement de Questasim. Pour cela, tapez `cpan` dans la console, puis
 `yes`, `yes`, `install Switch` et enfin `exit`.
 
+## Création des outils
+
+Cette partie explique comment créer les archives `ri5cy_toolchain.tar.gz` et 
+`xilinx_libs.tar.gz` à placer dans le dossier `tools`. Si vous possédez déjà ces
+archives, vous n'avez pas besoin de les recréer. Passez directement à la partie
+[Utilisation](#utilisation).
+
+### Compilation du compilateur D-RI5CY
+
+Entrez dans le dossier `riscy-toolchain` et exécutez le script `setup_build.sh`.
+
+```sh
+cd riscy-toolchain
+bash setup_build.sh
+```
+
+Ce script clone le répertoire [ri5cy_gnu_toolchain](https://github.com/pulp-platform/ri5cy_gnu_toolchain)
+de Pulpino, puis ajoute les modifications depuis le dossier `tweaks`. 
+Le script compile le compilateur, crée l'archive `ri5cy_toolchain.tar.gz`,
+la copie dans le dossier `tools` et installe le compilateur dans le dossier
+`.bin`. 
+
+### Export des bibliothèques Xilinx Vivado
+
+Cette étape suppose que vous avez accès au logiciel Vivado muni d'une license 
+valide. De plus, veillez à ce que le chemin vers le simulateur QuestaSim soit
+bien dans la variable d'environnement `$PATH`.
+
+Créez le dossier `vsim/xilinx_libs`.
+
+Ouvrez Vivado, puis dans la barre de menu supérieure, sélectionnez 
+`Tools > Compile Simulation Libraries`.
+Parametrez la fenêtre comme suit :
+- **Language** : All
+- **Library** : All
+- **Family** : All
+- **Compiled library location** : `vsim/xilinx_libs`
+- **Simulator executable path** : (chemin vers QuestaSim, pré-remplis)
+- **Miscellaneous options** : (vide)
+- **Compile Xilinx IP** : Coché
+- **Overwrite the current pre-compiled libraries** : Décoché
+- **Compile 32-bit libraries** : Décoché
+- **Verbose** : Coché
+
+Cliquez ensuite sur `Compile`. Cette étape prend beaucoup de temps, vous pouvez
+aller faire autre chose en attendant. 
+
+Une fois la compilation terminée, vous pouvez fermer Vivado. Ouvrez un terminal
+dans le dossier vsim, puis créez l'archive contenant les bibliothèques.
+
+```sh
+cd vsim
+tar -czvf ../tools/xilinx_libs.tar.gz xilinx_libs
+```
+
 ## Utilisation
 
 Pour utiliser ce répertoire, exécutez `source set_env.sh`. Afin de récupérer

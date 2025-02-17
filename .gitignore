@@ -3,7 +3,7 @@ sw/build/*
 imperio
 .bin/*
 .bin
-tools/*
+tools/*.tar.gz
 
 simu/*
 simu
