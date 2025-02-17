@@ -26,9 +26,9 @@ un disque de la machine et non dans un répertoire réseau, car ce dernier est
 parfois trop lent pour décompresser les fichiers.
 
 Après avoir cloné ce répertoire dans un dossier local, il vous faudra aussi
-récupérer les exécutables pour le compilateur ri5cy. Les instructions pour créer
-l'archive seront décrites dans (pas encore écrites).
-Placez l'archive dans le dossier tools.
+récupérer les exécutables pour le compilateur ri5cy. Si vous les possédez déjà, placez les archives `ri5cy_toolchain.tar.gz` et 
+`xilinx_libs.tar.gz` dans le dossier `tools`. Sinon, les instructions pour créer
+ces archives sont décrites dans la partie [Création des outils](#création-des-outils).
 
 Il vous faudra ensuite installer le module Switch dans Perl pour permettre le
 bon fonctionnement de Questasim. Pour cela, tapez `cpan` dans la console, puis
@@ -58,11 +58,15 @@ la copie dans le dossier `tools` et installe le compilateur dans le dossier
 
 ### Export des bibliothèques Xilinx Vivado
 
-Cette étape suppose que vous avez accès au logiciel Vivado muni d'une license 
+Cette étape suppose que vous avez accès au logiciel Vivado muni d'une licence 
 valide. De plus, veillez à ce que le chemin vers le simulateur QuestaSim soit
 bien dans la variable d'environnement `$PATH`.
 
-Créez le dossier `vsim/xilinx_libs`.
+Créez le dossier `vsim/xilinx_libs`. Assurez-vous d'être dans le dossier `pulpino`.
+
+```sh
+mkdir vsim/xilinx_libs
+```
 
 Ouvrez Vivado, puis dans la barre de menu supérieure, sélectionnez 
 `Tools > Compile Simulation Libraries`.
@@ -106,11 +110,15 @@ compiler le processeur RI5CY en ignorant les ajouts du DIFT. Pour automatiser
 cela, nous avons écrit deux scripts bash qui permettent de passer d'un
 processeur à l'autre.
 
-    ./D-RI5CY_to_RI5CY.sh
+```sh
+./D-RI5CY_to_RI5CY.sh
+```
 
 permet de passer du processeur D-RI5CY au processeur RI5CY.
 
-    ./RI5CY_to_D-RI5CY.sh
+```sh
+./RI5CY_to_D-RI5CY.sh
+```
 
 permet de passer du processeur RI5CY au processeur D-RI5CY.
 
@@ -118,15 +126,21 @@ permet de passer du processeur RI5CY au processeur D-RI5CY.
 
 Pour simuler des programmes, entrez dans le dosser `simu` et exécutez le script
 
-    source cmake_configure.riscv.gcc.sh
+```sh
+source cmake_configure.riscv.gcc.sh
+```
 
 Pour ajouter un programme à simuler, exécutez la commande 
 
-    make vcompile
+```sh
+make vcompile
+```
 
 puis compilez le programme (ici un exemple avec helloworld) :
 
-    make helloworld.vsim
+```sh
+make helloworld.vsim
+```
 
 Vous pourrez vous référer aux instructions 
 [ci-dessous](#running-simulations)
@@ -199,7 +213,9 @@ PULPino uses multiple git subrepositories
 
 To clone those subrepositores and update them, use
 
-    ./update-ips.py
+```sh
+./update-ips.py
+```
 
 This script will read the `ips_lists.txt` file and update to the versions
 specified in there. You can choose specific commits, tags or branches.
@@ -212,7 +228,9 @@ See docs/datasheet/ in this repository.
 
 It is written in LaTeX and there is no pdf included in the repository. Simply type
 
-    make all
+```sh
+make all
+```
 
 inside the folder to generate the pdf. Note that you need a working version of latex for this step.
 
@@ -222,7 +240,9 @@ inside the folder to generate the pdf. Note that you need a working version of l
 The software is built using CMake.
 Create a build folder somewhere, e.g. in the sw folder
 
-    mkdir build
+```sh
+mkdir build
+```
 
 Copy the cmake-configure.{or1k/riscv}.{gcc/llvm}.sh bash script to the build folder.
 This script can be found in the sw subfolder of the git repository.
@@ -232,7 +252,9 @@ This will setup everything to perform simulations using ModelSim.
 
 Inside the build folder, execute
 
-    make vcompile
+```sh
+make vcompile
+```
 
 to compile the RTL libraries using ModelSim. CMake automatically takes care of
 setting the `PULP_CORE` environment variable to the correct value based on the
@@ -240,12 +262,15 @@ compiler you specified when configuring cmake.
 
 To run a simulation in the modelsim GUI use
 
-    make helloworld.vsim
-
+```sh
+make helloworld.vsim
+```
 
 To run simulations in the modelsim console use
 
-    make helloworld.vsimc
+```sh
+make helloworld.vsimc
+```
 
 This will output a summary at the end of the simulation.
 This is intended for batch processing of a large number of tests.
@@ -276,11 +301,15 @@ PULPino easier.
 
 For disassembling a program call
 
-    make helloworld.read
+```sh
+make helloworld.read
+```
 
 To regenerate the bootcode and copy it to the `rtl` folder use
 
-    make boot_code.install
+```sh
+make boot_code.install
+```
 
 ## FPGA
 
@@ -300,6 +329,8 @@ git internal folders and create a tar gz.
 Most of official Arduino libraries are supported by PULPino software, they can be compiled, simulated and uploded the same way as traditional software programs using the available PULPino utilities.
 You only need to include main.cpp at the begining of the program:
 
-	#include "main.cpp"
+```c
+#include "main.cpp"
+```
 
 Take a look at the `sw/libs/Arduino_libs` subfolder for more information about the status of the currently supported libraries.
