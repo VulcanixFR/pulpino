@@ -29,9 +29,10 @@ search_pattern="define DIFT"
 
 # Liste des fichiers à modifier
 files_to_modify=(
-    "ips/riscv/include/riscv_config.sv"
-    "rtl/includes/config.sv"
-    "sw/apps/buffer-overflow/mytest.c"
+    "$ROOT_DIR/ips/riscv/include/riscv_config.sv"
+    "$ROOT_DIR/rtl/includes/config.sv"
+    "$ROOT_DIR/sw/apps/buffer_overflow/mytest.c"
+    "$ROOT_DIR/sw/apps/format_string/wu-ftpd.c"
     # Ajoute d'autres fichiers ici
 )
 
