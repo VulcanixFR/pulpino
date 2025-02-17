@@ -1,1 +1,1 @@
-add_application(format_string wu-ftpd.c)
+add_application(format_string format_string.c)

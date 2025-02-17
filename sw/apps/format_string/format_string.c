@@ -6,8 +6,8 @@
 
 void secretFunction()
 {
-  printf("Congratulations!\n");
-  printf("You have entered in the secret function!\n");
+  printf("\nShellcode!\nYou have entered in the secret function!\n");
+  for(int i = 0; i < 1000; i++) printf("");
 
   exit(0);
 }

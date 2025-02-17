@@ -1,1 +1,1 @@
-add_application(buffer_overflow mytest.c)
+add_application(buffer_overflow buffer_overflow.c)

@@ -45,6 +45,7 @@ long overflow_buffer[OVERFLOWSIZE];
 
 void shellcode(){
   printf("Shellcode!\n");
+  for (int i = 0; i < 1000; i++) printf("");
   exit(0);
 }
 
@@ -491,23 +492,12 @@ void vuln_bss_function_ptr(int choice) { /* Attack forms 2(a) and 4(c) */
 /*****************************************************************/
 /*                          main()                               */
 /*****************************************************************/
-__attribute__((optimize("align-functions=8")))
-void it (void) {
-  printf("Magnifique Tintin, vous etes un ananas !");
-} 
-
 int main (int argc, char **argv) {
   int choice;
-  
-  uint32_t* mtvec = 0x305;
-  printf("MTVEC : %x\r\n", *mtvec);
-  
-  *mtvec = &it;
-  printf("MTVEC : %x\r\n", *mtvec);
 
   base_pointer_offset = 4;
 
-  choice = 1;
+  choice = 1; //A modifier pour changer le type d'attaque
 
   switch(choice) {
   case -4:
@@ -560,5 +550,6 @@ int main (int argc, char **argv) {
     break;
   default:
     break; }
+  for (int i = 0; i < 1000; i++) printf("");
   return 0;
 }
