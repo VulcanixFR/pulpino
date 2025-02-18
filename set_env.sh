@@ -87,7 +87,7 @@ fi
 if [ ! -d $ROOT_DIR/.bin/bin ] ; then
 	echo "Extracting RI5CY Toolchain"
 	mkdir -p $ROOT_DIR/.bin
-	tar -xzvf $ROOT_DIR/tools/ri5cy_toolchain.tar.gz --strip-components=1 -C .bin installed_ri5cy/
+	tar -xzvf $ROOT_DIR/tools/ri5cy_toolchain.tar.gz -C .bin 
 fi
 
 # Installation des bibliothèques Xilinx
@@ -101,5 +101,3 @@ if [ ! -d $ROOT_DIR/simu ] ; then
     mkdir -p $ROOT_DIR/simu
     cp $ROOT_DIR/tools/cmake_configure.riscv.gcc.sh simu
 fi
-
-return 0
