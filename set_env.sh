@@ -99,5 +99,5 @@ fi
 
 if [ ! -d $ROOT_DIR/simu ] ; then 
     mkdir -p $ROOT_DIR/simu
-    cp $ROOT_DIR/tools/cmake_configure.riscv.gcc.sh simu
+    cp $ROOT_DIR/tools/cmake_configure.riscv.gcc.sh simu
 fi
