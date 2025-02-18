@@ -53,4 +53,4 @@ for file in "${files_to_modify[@]}"; do
     fi
 done
 
-echo "Les lignes spécifiques ont été décommentées dans les fichiers spécifiés."
+echo "Passage du processeur RI5CY au processeur D-RI5CY."

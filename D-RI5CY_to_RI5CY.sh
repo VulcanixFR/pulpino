@@ -52,4 +52,4 @@ for file in "${files_to_modify[@]}"; do
     fi
 done
 
-echo "Les lignes spécifiques ont été commentées dans les fichiers spécifiés."
+echo "Passage du processeur D-RI5CY au processeur RI5CY."

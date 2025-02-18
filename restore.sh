@@ -8,3 +8,4 @@ git clean -f
 git apply $PATCH
 
 cd $ROOT_DIR
+python generate-scripts.py

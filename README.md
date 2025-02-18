@@ -81,12 +81,14 @@ Parametrez la fenêtre comme suit :
 - **Library** : All
 - **Family** : All
 - **Compiled library location** : `vsim/xilinx_libs`
-- **Simulator executable path** : (chemin vers QuestaSim, pré-remplis)
+- **Simulator executable path** : (chemin vers QuestaSim, pré-rempli)
 - **Miscellaneous options** : (vide)
 - **Compile Xilinx IP** : Coché
 - **Overwrite the current pre-compiled libraries** : Décoché
 - **Compile 32-bit libraries** : Décoché
 - **Verbose** : Coché
+
+![Exemple de configuration Vivado](.images/image.png)
 
 Cliquez ensuite sur `Compile`. Cette étape prend beaucoup de temps, vous pouvez
 aller faire autre chose en attendant. Si une erreur apparaît sur la fin de la
@@ -148,6 +150,7 @@ permet de passer du processeur RI5CY au processeur D-RI5CY.
 Pour simuler des programmes, entrez dans le dosser `simu` et exécutez le script
 
 ```sh
+cd simu
 source cmake_configure.riscv.gcc.sh
 ```
 
