@@ -103,11 +103,24 @@ tar -czvf ../tools/xilinx_libs.tar.gz xilinx_libs
 
 ## Utilisation
 
-Pour utiliser ce répertoire, exécutez `source set_env.sh`. Afin de récupérer
-d'éventuelles modifications ou d'effectuer vous-même des modifications dans le
-dossier *ips/riscv*, vous devrez exécuter le script `./restore.sh`. A la fin de
-votre session de travail vous devrez enregistrer vos modifications sur ce
-dossier via le script `./save.sh` avant de commit et de push via git. \
+Pour utiliser ce répertoire, exécutez 
+
+```sh
+source set_env.sh
+```
+Afin de récupérer d'éventuelles modifications ou d'effectuer vous-même des
+modifications dans le dossier *ips/riscv*, vous devrez exécuter le script
+
+```sh
+./restore.sh
+```
+A la fin de votre session de travail vous devrez enregistrer vos modifications
+sur ce dossier via le script
+
+```sh
+./save.sh
+```
+avant de commit et de push via git. \
 **/!\ Attention** : Cette technique ne permet pas une modification en parallèle
 du dossier *ips/riscv*. Veillez à être le seul à travailler sur ce dossier.
 
