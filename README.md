@@ -60,7 +60,13 @@ la copie dans le dossier `tools` et installe le compilateur dans le dossier
 
 Cette étape suppose que vous avez accès au logiciel Vivado muni d'une licence 
 valide. De plus, veillez à ce que le chemin vers le simulateur QuestaSim soit
-bien dans la variable d'environnement `$PATH`.
+bien dans la variable d'environnement `$PATH`. Si vous êtes sur un PC du CIME,
+vous pouvez configurer votre terminal avec les commandes :
+
+```sh
+source ~/settings/settings_questa_sim_2021_3.sh
+source ~/settings/settings_modsim10_5c.sh
+```
 
 Créez le dossier `vsim/xilinx_libs`. Assurez-vous d'être dans le dossier `pulpino`.
 
@@ -83,7 +89,9 @@ Parametrez la fenêtre comme suit :
 - **Verbose** : Coché
 
 Cliquez ensuite sur `Compile`. Cette étape prend beaucoup de temps, vous pouvez
-aller faire autre chose en attendant. 
+aller faire autre chose en attendant. Si une erreur apparaît sur la fin de la
+compilation à propos d'une librairie, vous pouvez l'ignorer, elle nous est
+inutile.
 
 Une fois la compilation terminée, vous pouvez fermer Vivado. Ouvrez un terminal
 dans le dossier vsim, puis créez l'archive contenant les bibliothèques.
