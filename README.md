@@ -103,6 +103,16 @@ cd vsim
 tar -czvf ../tools/xilinx_libs.tar.gz xilinx_libs
 ```
 
+Si jamais vous ne parvenez pas à compiler les libraires ou à récupérer le
+compilateur, vous pouvez récupérer l'archive au lien suivant :
+[archive renater](https://filesender.renater.fr/?s=download&token=e1821c64-0819-4868-bcc6-ef3d587ea1de). \
+*Attention, cette archive périme le 21/03/2025.* \
+Ensuite, décompressez le contenu de cette archive dans le dossier `tools`.
+
+```sh
+tar -xf tools.tar.gz -C tools/
+```
+
 ## Utilisation
 
 Pour utiliser ce répertoire, exécutez 
