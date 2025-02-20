@@ -23,28 +23,28 @@ module core_region
 )
 (
 	// Horloge et Reset
-	input logic clk,                // Horloge d'entrée
-	input logic rst_n,              // Reset actif bas
+	input	logic 			clk,				// Horloge d'entrée
+	input	logic 			rst_n,				// Reset actif bas
 
-	input logic testmode_i,        // Mode test
-	input logic fetch_enable_i,     // Autorisation de fetch
-	input logic [31:0] irq_i,       // Interruptions
-	output logic core_busy_o,       // Signal indiquant que le coeur est occupé
-	input logic clock_gating_i,    // Signal de gating d'horloge
-	input logic [31:0] boot_addr_i, // Adresse de boot
+	input	logic 			testmode_i,			// Mode test
+	input	logic 			fetch_enable_i,		// Autorisation de fetch
+	input	logic [31:0]	irq_i,				// Interruptions
+	output	logic			core_busy_o,		// Signal indiquant que le coeur est occupé
+	input	logic			clock_gating_i,		// Signal de gating d'horloge
+	input	logic [31:0] 	boot_addr_i, 		// Adresse de boot
 
-	AXI_BUS.Master core_master,     // Interface maître AXI pour le coeur
-	AXI_BUS.Master dbg_master,      // Interface maître AXI pour le debug
-	AXI_BUS.Slave data_slave,       // Interface esclave AXI pour les données
-	AXI_BUS.Slave instr_slave,      // Interface esclave AXI pour les instructions
-	DEBUG_BUS.Slave debug,          // Interface esclave de debug
+	AXI_BUS.Master			core_master,		// Interface maître AXI pour le coeur
+	AXI_BUS.Master			dbg_master,			// Interface maître AXI pour le debug
+	AXI_BUS.Slave			data_slave,			// Interface esclave AXI pour les données
+	AXI_BUS.Slave			instr_slave,		// Interface esclave AXI pour les instructions
+	DEBUG_BUS.Slave			debug,				// Interface esclave de debug
 
 	// Signaux JTAG
-	input logic tck_i,              // Horloge JTAG
-	input logic trstn_i,            // Reset JTAG
-	input logic tms_i,              // Mode sélection JTAG
-	input logic tdi_i,              // Entrée de données JTAG
-	output logic tdo_o              // Sortie de données JTAG
+	input	logic			tck_i,				// Horloge JTAG
+	input	logic			trstn_i,			// Reset JTAG
+	input	logic			tms_i,				// Mode sélection JTAG
+	input	logic			tdi_i,				// Entrée de données JTAG
+	output	logic			tdo_o				// Sortie de données JTAG
 );
 
 	localparam INSTR_ADDR_WIDTH = $clog2(INSTR_RAM_SIZE)+1; // Largeur d'adresse pour la RAM d'instructions
@@ -53,84 +53,84 @@ module core_region
 	localparam AXI_B_WIDTH      = $clog2(AXI_DATA_WIDTH/8);  // Largeur d'un octet AXI
 
 	// Signaux vers/depuis le coeur
-	logic core_instr_req;  // Requête d'instruction depuis le coeur
-	logic core_instr_gnt;  // Accord d'instruction vers le coeur
-	logic core_instr_rvalid;  // Validité de la réponse d'instruction
-	logic [31:0] core_instr_addr;  // Adresse de l'instruction
-	logic [31:0] core_instr_rdata;  // Données d'instruction lues
+	logic			core_instr_req;			// Requête d'instruction depuis le coeur
+	logic			core_instr_gnt;			// Accord d'instruction vers le coeur
+	logic			core_instr_rvalid;  	// Validité de la réponse d'instruction
+	logic [31:0]	core_instr_addr;		// Adresse de l'instruction
+	logic [31:0]	core_instr_rdata;		// Données d'instruction lues
 
-	logic core_lsu_req;  // Requête de l'unité de chargement/stockage
-	logic core_lsu_gnt;  // Accord de l'unité de chargement/stockage
-	logic core_lsu_rvalid;  // Validité de la réponse de l'unité de chargement/stockage
-	logic [31:0] core_lsu_addr;  // Adresse de l'unité de chargement/stockage
-	logic core_lsu_we;  // Écriture activée pour l'unité de chargement/stockage
-	logic [3:0] core_lsu_be;  // Byte enable pour l'unité de chargement/stockage
-	logic [31:0] core_lsu_rdata;  // Données lues par l'unité de chargement/stockage
-	logic [31:0] core_lsu_wdata;  // Données à écrire par l'unité de chargement/stockage
+	logic			core_lsu_req;			// Requête de l'unité de chargement/stockage
+	logic			core_lsu_gnt;			// Accord de l'unité de chargement/stockage
+	logic			core_lsu_rvalid;		// Validité de la réponse de l'unité de chargement/stockage
+	logic [31:0]	core_lsu_addr;			// Adresse de l'unité de chargement/stockage
+	logic 			core_lsu_we;			// Écriture activée pour l'unité de chargement/stockage
+	logic [3:0]		core_lsu_be;			// Byte enable pour l'unité de chargement/stockage
+	logic [31:0]	core_lsu_rdata;			// Données lues par l'unité de chargement/stockage
+	logic [31:0]	core_lsu_wdata;			// Données à écrire par l'unité de chargement/stockage
 
-	logic core_data_req;  // Requête de données depuis le coeur
-	logic core_data_gnt;  // Accord de données vers le coeur
-	logic core_data_rvalid;  // Validité de la réponse de données
-	logic [31:0] core_data_addr;  // Adresse des données
-	logic core_data_we;  // Écriture activée pour les données
-	logic [3:0] core_data_be;  // Byte enable pour les données
-	logic [31:0] core_data_rdata;  // Données lues
-	logic [31:0] core_data_wdata;  // Données à écrire
+	logic			core_data_req;			// Requête de données depuis le coeur
+	logic			core_data_gnt;			// Accord de données vers le coeur
+	logic			core_data_rvalid;		// Validité de la réponse de données
+	logic [31:0]	core_data_addr;			// Adresse des données
+	logic			core_data_we;			// Écriture activée pour les données
+	logic [3:0]		core_data_be;			// Byte enable pour les données
+	logic [31:0]	core_data_rdata;		// Données lues
+	logic [31:0]	core_data_wdata;		// Données à écrire
 
 	// Signaux vers/depuis la mémoire AXI
-	logic is_axi_addr;  // Indique si l'adresse est dans l'espace AXI
-	logic axi_mem_req;  // Requête de mémoire AXI
-	logic [DATA_ADDR_WIDTH-1:0] axi_mem_addr;  // Adresse de la mémoire AXI
-	logic axi_mem_we;  // Écriture activée pour la mémoire AXI
-	logic [AXI_DATA_WIDTH/8-1:0] axi_mem_be;  // Byte enable pour la mémoire AXI
-	logic [AXI_DATA_WIDTH-1:0] axi_mem_rdata;  // Données lues depuis la mémoire AXI
-	logic [AXI_DATA_WIDTH-1:0] axi_mem_wdata;  // Données à écrire dans la mémoire AXI
+	logic							is_axi_addr;		// Indique si l'adresse est dans l'espace AXI
+	logic							axi_mem_req;		// Requête de mémoire AXI
+	logic [DATA_ADDR_WIDTH-1:0] 	axi_mem_addr;		// Adresse de la mémoire AXI
+	logic							axi_mem_we;			// Écriture activée pour la mémoire AXI
+	logic [AXI_DATA_WIDTH/8-1:0]	axi_mem_be;			// Byte enable pour la mémoire AXI
+	logic [AXI_DATA_WIDTH-1:0]		axi_mem_rdata;		// Données lues depuis la mémoire AXI
+	logic [AXI_DATA_WIDTH-1:0]		axi_mem_wdata;		// Données à écrire dans la mémoire AXI
 
 	// Signaux vers/depuis la mémoire d'instructions AXI
-	logic axi_instr_req;  // Requête d'instructions AXI
-	logic [INSTR_ADDR_WIDTH-1:0] axi_instr_addr;  // Adresse des instructions AXI
-	logic axi_instr_we;  // Écriture activée pour les instructions AXI
-	logic [AXI_DATA_WIDTH/8-1:0] axi_instr_be;  // Byte enable pour les instructions AXI
-	logic [AXI_DATA_WIDTH-1:0] axi_instr_rdata;  // Données d'instructions lues
-	logic [AXI_DATA_WIDTH-1:0] axi_instr_wdata;  // Données d'instructions à écrire
+	logic 							axi_instr_req;		// Requête d'instructions AXI
+	logic [INSTR_ADDR_WIDTH-1:0]	axi_instr_addr;		// Adresse des instructions AXI
+	logic							axi_instr_we;		// Écriture activée pour les instructions AXI
+	logic [AXI_DATA_WIDTH/8-1:0]	axi_instr_be;		// Byte enable pour les instructions AXI
+	logic [AXI_DATA_WIDTH-1:0]		axi_instr_rdata;	// Données d'instructions lues
+	logic [AXI_DATA_WIDTH-1:0]		axi_instr_wdata;	// Données d'instructions à écrire
 
 	// Signaux vers/depuis la mémoire d'instructions
-	logic instr_mem_en;  // Activation de la mémoire d'instructions
-	logic [INSTR_ADDR_WIDTH-1:0] instr_mem_addr;  // Adresse de la mémoire d'instructions
-	logic instr_mem_we;  // Écriture activée pour la mémoire d'instructions
-	logic [AXI_DATA_WIDTH/8-1:0] instr_mem_be;  // Byte enable pour la mémoire d'instructions
-	logic [AXI_DATA_WIDTH-1:0] instr_mem_rdata;  // Données lues depuis la mémoire d'instructions
-	logic [AXI_DATA_WIDTH-1:0] instr_mem_wdata;  // Données à écrire dans la mémoire d'instructions
+	logic							instr_mem_en;		// Activation de la mémoire d'instructions
+	logic [INSTR_ADDR_WIDTH-1:0]	instr_mem_addr;		// Adresse de la mémoire d'instructions
+	logic							instr_mem_we;		// Écriture activée pour la mémoire d'instructions
+	logic [AXI_DATA_WIDTH/8-1:0]	instr_mem_be;		// Byte enable pour la mémoire d'instructions
+	logic [AXI_DATA_WIDTH-1:0]		instr_mem_rdata;	// Données lues depuis la mémoire d'instructions
+	logic [AXI_DATA_WIDTH-1:0]		instr_mem_wdata;	// Données à écrire dans la mémoire d'instructions
 
 	// Signaux vers/depuis la mémoire de données
-	logic data_mem_en;  // Activation de la mémoire de données
-	logic [DATA_ADDR_WIDTH-1:0] data_mem_addr;  // Adresse de la mémoire de données
-	logic data_mem_we;  // Écriture activée pour la mémoire de données
-	logic [AXI_DATA_WIDTH/8-1:0] data_mem_be;  // Byte enable pour la mémoire de données
-	logic [AXI_DATA_WIDTH-1:0] data_mem_rdata;  // Données lues depuis la mémoire de données
-	logic [AXI_DATA_WIDTH-1:0] data_mem_wdata;  // Données à écrire dans la mémoire de données
+	logic 							data_mem_en;		// Activation de la mémoire de données
+	logic [DATA_ADDR_WIDTH-1:0]		data_mem_addr;		// Adresse de la mémoire de données
+	logic 							data_mem_we;		// Écriture activée pour la mémoire de données
+	logic [AXI_DATA_WIDTH/8-1:0]	data_mem_be;		// Byte enable pour la mémoire de données
+	logic [AXI_DATA_WIDTH-1:0]		data_mem_rdata;		// Données lues depuis la mémoire de données
+	logic [AXI_DATA_WIDTH-1:0]		data_mem_wdata;		// Données à écrire dans la mémoire de données
 
 	enum logic [0:0] { AXI, RAM } lsu_resp_CS, lsu_resp_NS;  // États de réponse de l'unité de chargement/stockage
 
 	// Signaux vers/depuis le wrapper core2axi
-	logic core_axi_req;  // Requête AXI depuis le coeur
-	logic core_axi_gnt;  // Accord AXI vers le coeur
-	logic core_axi_rvalid;  // Validité de la réponse AXI
-	logic [31:0] core_axi_addr;  // Adresse AXI
-	logic core_axi_we;  // Écriture activée pour AXI
-	logic [3:0] core_axi_be;  // Byte enable pour AXI
-	logic [31:0] core_axi_rdata;  // Données lues depuis AXI
-	logic [31:0] core_axi_wdata;  // Données à écrire dans AXI
+	logic			core_axi_req;			// Requête AXI depuis le coeur
+	logic			core_axi_gnt;			// Accord AXI vers le coeur
+	logic			core_axi_rvalid;		// Validité de la réponse AXI
+	logic [31:0]	core_axi_addr;			// Adresse AXI
+	logic			core_axi_we;			// Écriture activée pour AXI
+	logic [3:0]		core_axi_be;			// Byte enable pour AXI
+	logic [31:0]	core_axi_rdata;			// Données lues depuis AXI
+	logic [31:0]	core_axi_wdata;			// Données à écrire dans AXI
 
 `ifdef DIFT
 	// Signaux de tag pour le mode DIFT
-	logic core_lsu_gnt_tag;
-	logic core_lsu_we_tag;
-	logic [3:0] core_lsu_rdata_tag;
-	logic core_lsu_rvalid_tag;
-	logic core_data_we_tag;
-	logic core_data_wdata_tag;
-	logic [3:0] core_data_rdata_tag;
+	logic			core_lsu_gnt_tag;
+	logic 			core_lsu_we_tag;
+	logic [3:0]		core_lsu_rdata_tag;
+	logic			core_lsu_rvalid_tag;
+	logic			core_data_we_tag;
+	logic			core_data_wdata_tag;
+	logic [3:0]		core_data_rdata_tag;
 `endif
 
 	AXI_BUS
@@ -189,12 +189,12 @@ module core_region
 		.debug_we_i      ( debug.we          ),  // Écriture activée pour le debug
 		.debug_wdata_i   ( debug.wdata       ),  // Données à écrire pour le debug
 		.debug_rdata_o   ( debug.rdata       ),  // Données lues pour le debug
-		.debug_halted_o  (                   ),  // Coeur arrêté
+		.debug_halted_o  (                   ),  // Cœur arrêté
 		.debug_halt_i    ( 1'b0              ),  // Arrêt de debug
 		.debug_resume_i  ( 1'b0              ),  // Reprise de debug
 		.fetch_enable_i  ( fetch_enable_i    ),  // Autorisation de fetch
-		.core_busy_o     ( core_busy_o       ),  // Coeur occupé
-		.ext_perf_counters_i (               )  // Compteurs de performance externes
+		.core_busy_o     ( core_busy_o       ),  // Cœur occupé
+		.ext_perf_counters_i (               )	 // Compteurs de performance externes
 	);
 
 	core2axi_wrap
@@ -244,24 +244,24 @@ module core_region
 	//----------------------------------------------------------------------------//
 	// DEMUX
 	//----------------------------------------------------------------------------//
-	assign is_axi_addr     = (core_lsu_addr[31:20] != 12'h001);  // Détermine si l'adresse est dans l'espace AXI
-	assign core_data_req   = (~is_axi_addr) & core_lsu_req;  // Requête de données pour la RAM
-	assign core_axi_req    =   is_axi_addr  & core_lsu_req;  // Requête de données pour AXI
+	assign is_axi_addr		= (core_lsu_addr[31:20] != 12'h001);  // Détermine si l'adresse est dans l'espace AXI
+	assign core_data_req	= (~is_axi_addr) & core_lsu_req;  // Requête de données pour la RAM
+	assign core_axi_req		=   is_axi_addr  & core_lsu_req;  // Requête de données pour AXI
 
-	assign core_data_addr  = core_lsu_addr;  // Adresse des données
-	assign core_data_we    = core_lsu_we;  // Écriture activée pour les données
-	assign core_data_be    = core_lsu_be;  // Byte enable pour les données
-	assign core_data_wdata = core_lsu_wdata;  // Données à écrire
+	assign core_data_addr	= core_lsu_addr;			// Adresse des données
+	assign core_data_we		= core_lsu_we;				// Écriture activée pour les données
+	assign core_data_be		= core_lsu_be;				// Byte enable pour les données
+	assign core_data_wdata	= core_lsu_wdata;			// Données à écrire
 
 `ifdef DIFT
-	assign core_data_we_tag    = core_lsu_we_tag;  // Tag d'écriture pour le mode DIFT
-	assign core_data_wdata_tag = core_lsu_wdata_tag;  // Tag de données à écrire pour le mode DIFT
+	assign core_data_we_tag    = core_lsu_we_tag;		// Tag d'écriture pour le mode DIFT
+	assign core_data_wdata_tag = core_lsu_wdata_tag;	// Tag de données à écrire pour le mode DIFT
 `endif
 
-	assign core_axi_addr   = core_lsu_addr;  // Adresse AXI
-	assign core_axi_we     = core_lsu_we;  // Écriture activée pour AXI
-	assign core_axi_be     = core_lsu_be;  // Byte enable pour AXI
-	assign core_axi_wdata  = core_lsu_wdata;  // Données à écrire pour AXI
+	assign core_axi_addr	= core_lsu_addr;			// Adresse AXI
+	assign core_axi_we		= core_lsu_we;				// Écriture activée pour AXI
+	assign core_axi_be		= core_lsu_be;				// Byte enable pour AXI
+	assign core_axi_wdata	= core_lsu_wdata;			// Données à écrire pour AXI
 
 	always_ff @(posedge clk, negedge rst_n)
 	begin
