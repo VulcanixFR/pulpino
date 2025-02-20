@@ -724,8 +724,14 @@ const struct riscv_opcode riscv_builtin_opcodes[] =
 {"p.extbs", 		"Xpulpv0", "d,s",   	MATCH_EXTBS,		 		MASK_PALUS, 	match_opcode, 	WR_xd|RD_xs1},
 {"p.extbz", 		"Xpulpv0", "d,s",   	MATCH_EXTBZ, 				MASK_PALUS, 	match_opcode, 	WR_xd|RD_xs1},
 {"p.abs",   		"Xpulpv0", "d,s",   	MATCH_ABS,   				MASK_PALUS, 	match_opcode, 	WR_xd|RD_xs1},
-{"p.set",   		"Xpulpv0", "d",   	MATCH_SET,   				MASK_SET, 	match_opcode, 	WR_xd},
-{"p.spsw",  		"Xpulpv0", "t,q(s)",  	MATCH_SPSW,        			MASK_SPSW,     	match_opcode,	RD_xs1|RD_xs2},
+
+// DIFT
+{"p.set",   		"Xpulpv0", "d",   	  MATCH_SET,   				MASK_SET, 	  match_opcode, 	WR_xd},
+{"p.spsw",  		"Xpulpv0", "t,q(s)",  MATCH_SPSW,        	MASK_SPSW,    match_opcode,	  RD_xs1|RD_xs2},
+{"p.spsh",      "Xpulpv0", "t,q(s)",  MATCH_SPSH,         MASK_SPSH,    match_opcode,   RD_xs1|RD_xs2},
+{"p.spsb",      "Xpulpv0", "t,q(s)",  MATCH_SPSB,         MASK_SPSB,    match_opcode,   RD_xs1|RD_xs2},
+{"p.hmem",      "Xpulpv0", "t,q(s)",  MATCH_HMEM,         MASK_HMEM,    match_opcode,   RD_xs1|RD_xs2},
+
 
 /* hardware loops */
 

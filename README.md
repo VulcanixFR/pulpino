@@ -60,7 +60,13 @@ la copie dans le dossier `tools` et installe le compilateur dans le dossier
 
 Cette étape suppose que vous avez accès au logiciel Vivado muni d'une licence 
 valide. De plus, veillez à ce que le chemin vers le simulateur QuestaSim soit
-bien dans la variable d'environnement `$PATH`.
+bien dans la variable d'environnement `$PATH`. Si vous êtes sur un PC du CIME,
+vous pouvez configurer votre terminal avec les commandes :
+
+```sh
+source ~/settings/settings_questa_sim_2021_3.sh
+source ~/settings/settings_modsim10_5c.sh
+```
 
 Créez le dossier `vsim/xilinx_libs`. Assurez-vous d'être dans le dossier `pulpino`.
 
@@ -75,15 +81,19 @@ Parametrez la fenêtre comme suit :
 - **Library** : All
 - **Family** : All
 - **Compiled library location** : `vsim/xilinx_libs`
-- **Simulator executable path** : (chemin vers QuestaSim, pré-remplis)
+- **Simulator executable path** : (chemin vers QuestaSim, pré-rempli)
 - **Miscellaneous options** : (vide)
 - **Compile Xilinx IP** : Coché
 - **Overwrite the current pre-compiled libraries** : Décoché
 - **Compile 32-bit libraries** : Décoché
 - **Verbose** : Coché
 
+![Exemple de configuration Vivado](.images/image.png)
+
 Cliquez ensuite sur `Compile`. Cette étape prend beaucoup de temps, vous pouvez
-aller faire autre chose en attendant. 
+aller faire autre chose en attendant. Si une erreur apparaît sur la fin de la
+compilation à propos d'une librairie, vous pouvez l'ignorer, elle nous est
+inutile.
 
 Une fois la compilation terminée, vous pouvez fermer Vivado. Ouvrez un terminal
 dans le dossier vsim, puis créez l'archive contenant les bibliothèques.
@@ -93,13 +103,36 @@ cd vsim
 tar -czvf ../tools/xilinx_libs.tar.gz xilinx_libs
 ```
 
+Si jamais vous ne parvenez pas à compiler les libraires ou à récupérer le
+compilateur, vous pouvez récupérer l'archive au lien suivant :
+[archive renater](https://filesender.renater.fr/?s=download&token=e1821c64-0819-4868-bcc6-ef3d587ea1de). \
+*Attention, cette archive périme le 21/03/2025.* \
+Ensuite, décompressez le contenu de cette archive dans le dossier `tools`.
+
+```sh
+tar -xf tools.tar.gz -C tools/
+```
+
 ## Utilisation
 
-Pour utiliser ce répertoire, exécutez `source set_env.sh`. Afin de récupérer
-d'éventuelles modifications ou d'effectuer vous-même des modifications dans le
-dossier *ips/riscv*, vous devrez exécuter le script `./restore.sh`. A la fin de
-votre session de travail vous devrez enregistrer vos modifications sur ce
-dossier via le script `./save.sh` avant de commit et de push via git. \
+Pour utiliser ce répertoire, exécutez 
+
+```sh
+source set_env.sh
+```
+Afin de récupérer d'éventuelles modifications ou d'effectuer vous-même des
+modifications dans le dossier *ips/riscv*, vous devrez exécuter le script
+
+```sh
+./restore.sh
+```
+A la fin de votre session de travail vous devrez enregistrer vos modifications
+sur ce dossier via le script
+
+```sh
+./save.sh
+```
+avant de commit et de push via git. \
 **/!\ Attention** : Cette technique ne permet pas une modification en parallèle
 du dossier *ips/riscv*. Veillez à être le seul à travailler sur ce dossier.
 
@@ -127,6 +160,7 @@ permet de passer du processeur RI5CY au processeur D-RI5CY.
 Pour simuler des programmes, entrez dans le dosser `simu` et exécutez le script
 
 ```sh
+cd simu
 source cmake_configure.riscv.gcc.sh
 ```
 

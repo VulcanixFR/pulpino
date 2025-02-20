@@ -3,9 +3,14 @@ sw/build/*
 imperio
 .bin/*
 .bin
+.bin.bak/*
+.bin.bak
 tools/*.tar.gz
 
 simu/*
 simu
 
 vsim/xilinx_libs/*
+riscy-toolchain/*.tar.gz
+riscy-toolchain/ri5cy_gnu_toolchain
+riscy-toolchain/ri5cy_gnu_toolchain/*
