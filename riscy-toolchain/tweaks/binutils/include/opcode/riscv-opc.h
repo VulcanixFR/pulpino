@@ -1264,8 +1264,31 @@
 /* DIFT */
 #define MATCH_SET   0Xb4000033
 #define MASK_SET    0xfffff07f
-#define MATCH_SPSW  0X00007023
+
+// Modif 2025 : Opcode 0x1b
 #define MASK_SPSW   0x0000707f
+#define MATCH_SPSW  0X0001001B
+
+// Ajout p.spsh
+#define MASK_SPSH   0x0000707f
+#define MATCH_SPSH  0X0000101B
+
+// Ajout p.spsb
+#define MASK_SPSB   0x0000707f
+#define MATCH_SPSB  0X0000201B
+
+// Ajout p.hmem
+#define MASK_HMEM   0x0000707f
+#define MATCH_HMEM  0x0000301B
+
+// Ajout p.hmark
+#define MASK_HMARK  0xFE007FFF
+#define MATCH_HMARK 0xB4001033
+
+// Ajout p.hset
+#define MASK_HSET   0xFE0FFFFF
+#define MATCH_HSET  0xB4002033
+
 
 #endif
 #ifdef DECLARE_INSN

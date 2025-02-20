@@ -182,7 +182,16 @@ print(f"{pspsw_mask} == {mask}", pspsw_mask == mask)
 # Cet opcode servira à :
 # - Implémenter les variantes manquantes de p.spsw
 # - Impélmenter p.hmem
-OPCODE_DIFTSTORE = 0b1111111 # Pas utilisé ^^
+OPCODE_existe   = [ 0x73, 0x0f, 0x33, 0x13, 0x23, 0x03, 0x63, 0x67, 0x6f, 0x17, 0x37, 0x0b, 0x2b, 0x5b, 0x57, 0x7b ]
+OPCODE_neo      = [ (i << 3) | 0b011 for i in range(16) ]
+OPCODE_dispo    = [ n for n in OPCODE_neo if n not in OPCODE_existe ]
+__str_dispo     = [ f"{n:02x}" for n in OPCODE_dispo ]
+print("OPCODEs disponibles :", ", ".join(__str_dispo))
+
+OPCODE_DIFTSTORE = OPCODE_dispo[0]
+print(f"OPCODE DIFT_STORE = {OPCODE_DIFTSTORE:X} ({OPCODE_DIFTSTORE:07b})")
+OPCODE_DIFTIMM = OPCODE_dispo[1] 
+print(f"OPCODE DIFT_IMM = {OPCODE_DIFTIMM:X} ({OPCODE_DIFTIMM:07b})")
 
 # Pour l'implémentation des fonctionnalités, 
 # on se basera sur l'opcode OPCODE_STORE
@@ -243,14 +252,25 @@ print("\nConception de l'instruction p.hset : ")
 
 p_hset_mask  = make_r(0b1111111, 0b11111, 0b111, 0b11111, 0, 0b1111111)[0]
 p_hset_match = make_r(0x33, 0, 0b010, 0, 0, 0x5a)[0]
-print(f"p.hmark MASK  : 0x{p_hset_mask:08X} ({print_r(p_hset_mask)} <- Les bits pour rd sont forcés à 0)")
-print(f"p.hmark MATCH : 0x{p_hset_match:08X} ({print_r(p_hset_match)})")
+print(f"p.hset MASK  : 0x{p_hset_mask:08X} ({print_r(p_hset_mask)} <- Les bits pour rd sont forcés à 0)")
+print(f"p.hset MATCH : 0x{p_hset_match:08X} ({print_r(p_hset_match)})")
 
 def make_p_hset (rs2: int):
     inv = ~p_hset_mask
     t = make_r(0, 0, 0, 0, rs2, 0)[0]
     return p_hset_match | (t & inv)
 
+print("\nConception de l'instruction p.hset : ")
+# - p.hmem
+#
+# Création de l'instruction : à l'image de p.spsw
+# On passe func3 à 011
+
+_, p_hmem_match, p_hmem_mask = make_s(OPCODE_DIFTSTORE, 0b011, 0, 0, 0)
+# on autorise l'utilisation d'un registre plutôt qu'un immédiat pour le décalage
+p_hmem_mask &= ~(0b100 << 12)
+print(f"p.hmem MASK  : 0x{p_hmem_mask:08X} ({print_r(p_hmem_mask)}")
+print(f"p.hmem MATCH : 0x{p_hmem_match:08X} ({print_r(p_hmem_match)})")
 
 print("\nExemples d'instructions hiérarchiques en binaire")
 
@@ -259,11 +279,47 @@ print(f"p.hmark x1, x2    0x{ex1:08X} ({print_r(ex1)})")
 ex1 = make_p_hset(6)
 print(f"p.hset x6         0x{ex1:08X} ({print_r(ex1)})")
 
+print("\nRedéfinition des instructions liées au DIFT")
+
+_, p_spsb_match, p_spsb_mask = make_s(OPCODE_DIFTSTORE, 0b000, 0, 0, 0)
+_, p_spsh_match, p_spsh_mask = make_s(OPCODE_DIFTSTORE, 0b001, 0, 0, 0)
+_, p_spsw_match, p_spsw_mask = make_s(OPCODE_DIFTSTORE, 0b010, 0, 0, 0)
+
+# on autorise l'utilisation d'un registre plutôt qu'un immédiat pour le décalage
+p_spsb_mask &= ~(0b100 << 12)
+p_spsh_mask &= ~(0b100 << 12)
+p_spsw_mask &= ~(0b100 << 12)
+
+print(f"p.spsb MASK  : {p_spsb_mask:08X} ({print_s(p_spsb_mask)})")
+print(f"p.spsb MATCH : {p_spsb_match:08X} ({print_s(p_spsb_match)})")
+print()
+print(f"p.spsh MASK  : {p_spsh_mask:08X} ({print_s(p_spsh_mask)})")
+print(f"p.spsh MATCH : {p_spsh_match:08X} ({print_s(p_spsh_match)})")
+print()
+print(f"p.spsw MASK  : {p_spsw_mask:08X} ({print_s(p_spsw_mask)})")
+print(f"p.spsw MATCH : {p_spsw_match:08X} ({print_s(p_spsw_match)})")
 
 print("\nRécapitulatif des masks et matchs")
 print("Instruction", "|", "Mask" + " " * 33, "|", "Match")
 print("p.set      ", "|", print_r(pset_mask), "|", print_r(pset_match))
-print("p.spsw     ", "|", print_s(pspsw_mask), "|", print_s(pspsw_match))
+print("p.spsb     ", "|", print_s(p_spsb_mask), "|", print_s(p_spsb_match))
+print("p.spsh     ", "|", print_s(p_spsh_mask), "|", print_s(p_spsh_match))
+print("p.spsw     ", "|", print_s(p_spsw_mask), "|", print_s(p_spsw_match))
 print("p.hmark    ", "|", print_r(p_hmark_mask), "|", print_r(p_hmark_match))
 print("p.hset     ", "|", print_r(p_hset_mask), "|", print_r(p_hset_match))
-print("p.hmem     ", "|", print_s(0), "|", print_s(0))
+print("p.hmem     ", "|", print_s(p_hmem_mask), "|", print_s(p_hmem_mask))
+
+
+"""
+
+{"sb",        "I",   "t,q(s)",  MATCH_SB, MASK_SB, match_opcode,   RD_xs1|RD_xs2 },
+{"sb",        "I",   "t,A,s",  0, (int) M_SB, match_never,  INSN_MACRO },
+{"sh",        "I",   "t,q(s)",  MATCH_SH, MASK_SH, match_opcode,   RD_xs1|RD_xs2 },
+{"sh",        "I",   "t,A,s",  0, (int) M_SH, match_never,  INSN_MACRO },
+{"sw",        "I",   "t,q(s)",  MATCH_SW, MASK_SW, match_opcode,   RD_xs1|RD_xs2 },
+{"sw",        "I",   "t,A,s",  0, (int) M_SW, match_never,  INSN_MACRO },
+
+
+
+
+"""
