@@ -32,3 +32,6 @@
 
 //Ligne ci-dessous à commenter lors d'une compilation du RI5CY seul
 `define DIFT 1
+
+//Ligne ci-dessous à décommenter pour activer l'extension du dift à la mémoire hiérarchique
+`define DIFT_H 1
