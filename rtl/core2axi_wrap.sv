@@ -17,7 +17,7 @@ module core2axi_wrap
 	parameter AXI_USER_WIDTH	= 6,
 	parameter AXI_ID_WIDTH		= 6,
 	parameter REGISTERED_GRANT	= "FALSE"
-)core_lsu_we_tag
+)
 (
 	input logic							clk_i,
 	input logic							rst_ni,

@@ -1267,7 +1267,7 @@
 
 // Modif 2025 : Opcode 0x1b
 #define MASK_SPSW   0x0000707f
-#define MATCH_SPSW  0X0001001B
+#define MATCH_SPSW  0X0000001B
 
 // Ajout p.spsh
 #define MASK_SPSH   0x0000707f

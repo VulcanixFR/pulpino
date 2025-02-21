@@ -267,8 +267,7 @@ print("\nConception de l'instruction p.hset : ")
 # On passe func3 à 011
 
 _, p_hmem_match, p_hmem_mask = make_s(OPCODE_DIFTSTORE, 0b011, 0, 0, 0)
-# on autorise l'utilisation d'un registre plutôt qu'un immédiat pour le décalage
-p_hmem_mask &= ~(0b100 << 12)
+
 print(f"p.hmem MASK  : 0x{p_hmem_mask:08X} ({print_r(p_hmem_mask)}")
 print(f"p.hmem MATCH : 0x{p_hmem_match:08X} ({print_r(p_hmem_match)})")
 
@@ -284,11 +283,6 @@ print("\nRedéfinition des instructions liées au DIFT")
 _, p_spsb_match, p_spsb_mask = make_s(OPCODE_DIFTSTORE, 0b000, 0, 0, 0)
 _, p_spsh_match, p_spsh_mask = make_s(OPCODE_DIFTSTORE, 0b001, 0, 0, 0)
 _, p_spsw_match, p_spsw_mask = make_s(OPCODE_DIFTSTORE, 0b010, 0, 0, 0)
-
-# on autorise l'utilisation d'un registre plutôt qu'un immédiat pour le décalage
-p_spsb_mask &= ~(0b100 << 12)
-p_spsh_mask &= ~(0b100 << 12)
-p_spsw_mask &= ~(0b100 << 12)
 
 print(f"p.spsb MASK  : {p_spsb_mask:08X} ({print_s(p_spsb_mask)})")
 print(f"p.spsb MATCH : {p_spsb_match:08X} ({print_s(p_spsb_match)})")
@@ -313,13 +307,18 @@ print("p.hmem     ", "|", print_s(p_hmem_mask), "|", print_s(p_hmem_mask))
 """
 
 {"sb",        "I",   "t,q(s)",  MATCH_SB, MASK_SB, match_opcode,   RD_xs1|RD_xs2 },
-{"sb",        "I",   "t,A,s",  0, (int) M_SB, match_never,  INSN_MACRO },
 {"sh",        "I",   "t,q(s)",  MATCH_SH, MASK_SH, match_opcode,   RD_xs1|RD_xs2 },
-{"sh",        "I",   "t,A,s",  0, (int) M_SH, match_never,  INSN_MACRO },
 {"sw",        "I",   "t,q(s)",  MATCH_SW, MASK_SW, match_opcode,   RD_xs1|RD_xs2 },
-{"sw",        "I",   "t,A,s",  0, (int) M_SW, match_never,  INSN_MACRO },
 
+{"addi",      "I",   "d,s,j",  MATCH_ADDI, MASK_ADDI, match_opcode,  WR_xd|RD_xs1 },
 
-
+#define WR_xd INSN_WRITE_GPR_D
+#define WR_fd INSN_WRITE_FPR_D
+#define RD_xs1 INSN_READ_GPR_S
+#define RD_xs2 INSN_READ_GPR_T
+#define RD_xs3 INSN_READ_GPR_R
+#define RD_fs1 INSN_READ_FPR_S
+#define RD_fs2 INSN_READ_FPR_T
+#define RD_fs3 INSN_READ_FPR_R
 
 """
