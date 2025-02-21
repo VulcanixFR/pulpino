@@ -13,9 +13,18 @@ f1:
 
 .p2align 1
 f2:
-    lui  t2, %hi(str1)
-    addi t2, t2, %lo(str1)
-    lw   a0, 4(t2)
+    # Stocke ra
+    addi sp, sp, -4
+    sw   ra, 0(sp)
+
+    # Appel de printf    
+    la      a0, str1
+    jal     printf
+
+    # Reprend ra
+    lw   ra, 0(sp)
+    addi sp, sp, 4
+    
     jalr x0, ra
 
 .p2align 1
@@ -52,10 +61,20 @@ setup:
     # jal     ra, f1
 
     ## Changement de sécurité et saut
+    
+    ### On stocke ra dans le stack
+    addi sp, sp, -4
+    sw   ra, 0(sp)
+
+    ### On saute !
     lui     t4, %hi(f2)
     addi    t4, t4, %lo(f2)
-    p.hmark t4, t6
-    jalr    ra, t6
+    p.hmark t4, t6          # <- On marque le niveau de sécurité appelé à 3
+    jalr    ra, t4
+
+    ### On enlève ra du stack
+    lw   ra, 0(sp)
+    addi sp, sp, 4
 
     # Fin
     addi a0, x0, 0
@@ -63,6 +82,13 @@ setup:
 
 .p2align 1
 loop:
+
+    # Temporisation pour l'UART
+    addi    t1, zero, 101
+_loop_wait_end:
+    addi    t1, t1, -1
+    bne     t1, zero, 0  
+
     # Fin
     addi a0, x0, 0
     jalr x0, ra
