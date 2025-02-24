@@ -22287,7 +22287,7 @@ index 0000000..7e9945b
 +endmodule
 diff --git a/register_file_tag.sv b/register_file_tag.sv
 new file mode 100644
-index 0000000..f8c56ce
+index 0000000..f13fbdb
 --- /dev/null
 +++ b/register_file_tag.sv
 @@ -0,0 +1,171 @@
@@ -22308,7 +22308,7 @@ index 0000000..f8c56ce
 +module riscv_register_file_tag
 +#(
 +  parameter ADDR_WIDTH    = 5,
-+  parameter DATA_WIDTH    = 1
++  parameter DATA_WIDTH    = 3
 +)
 +(
 +  // Clock and Reset
