@@ -19715,7 +19715,7 @@ index 06daf25..99145e6 100644
  
  endmodule
 diff --git a/id_stage.sv b/id_stage.sv
-index 01389e1..333441d 100644
+index 01389e1..9364a32 100644
 --- a/id_stage.sv
 +++ b/id_stage.sv
 @@ -25,6 +25,7 @@
@@ -20200,9 +20200,9 @@ index 01389e1..333441d 100644
 +    .rs1_i_tag                       ( rs1_i_tag                 ),
 +    .regfile_dest_tag                ( regfile_dest_tag          ),
 +    .tcr_i                           ( tcr_i                     ),
-+`ifdef DIFT_H
-+    .thr_i                           ( thr_i                     ),
-+`endif
++//`ifdef DIFT_H
++//    .thr_i                           ( thr_i                     ),
++//`endif
 +    .regfile_we_wb_i                 ( regfile_we_wb_i           ),
 +    .exception_o                     ( exception_tag             )
 +  );
@@ -22287,7 +22287,7 @@ index 0000000..7e9945b
 +endmodule
 diff --git a/register_file_tag.sv b/register_file_tag.sv
 new file mode 100644
-index 0000000..f13fbdb
+index 0000000..73a901c
 --- /dev/null
 +++ b/register_file_tag.sv
 @@ -0,0 +1,171 @@
@@ -22299,7 +22299,7 @@ index 0000000..f13fbdb
 +// Project Name:   RI5CY                                                      //
 +// Language:       SystemVerilog                                              //
 +//                                                                            //
-+// Description:    Register file with 31x1 bit tags. Tag 0                    //
++// Description:    Register file with 31x3 bits tags. Tag 0                   //
 +//                 is fixed to 0. This register file is based on latches and  //
 +//                 is thus smaller than the flip-flop based register file.    //
 +//                                                                            //
