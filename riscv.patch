@@ -20898,7 +20898,7 @@ index 0000000..f5cbdeb
 +
 +endmodule
 diff --git a/load_store_unit.sv b/load_store_unit.sv
-index 9383ad8..38b0c49 100644
+index 9383ad8..fbd99dc 100644
 --- a/load_store_unit.sv
 +++ b/load_store_unit.sv
 @@ -23,6 +23,7 @@
@@ -21069,7 +21069,7 @@ index 9383ad8..38b0c49 100644
 +
 +      3'b100:
 +      begin
-+        rdata_h_ext_tag = {3'b000, data_rdata_i_tag[4:5]};
++        rdata_h_ext_tag = {3'b000, data_rdata_i_tag[5:4]};
 +      end
 +
 +      3'b101:
