@@ -20620,16 +20620,20 @@ index 60d181d..b50d8db 100644
  
    assign if_ready_o = valid & id_ready_i;
 diff --git a/include/riscv_config.sv b/include/riscv_config.sv
-index 7137bae..227b004 100644
+index 7137bae..3fd2afb 100644
 --- a/include/riscv_config.sv
 +++ b/include/riscv_config.sv
-@@ -28,3 +28,6 @@
+@@ -28,3 +28,9 @@
  `endif
  //`define SIMCHECKER
  `endif
 +
 +//Ligne ci-dessous à commenter lors d'une compilation du RI5CY seul
 +`define DIFT 1
++
++//ligne ci-dessous à décommenter pour utiliser le DIFT étendu à la mémoire
++`define DIFT_H 1
+\ No newline at end of file
 diff --git a/include/riscv_defines.sv b/include/riscv_defines.sv
 index 7a83e27..764f4be 100644
 --- a/include/riscv_defines.sv

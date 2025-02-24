@@ -35,3 +35,6 @@
 
 //Ligne ci-dessous à décommenter pour activer l'extension du dift à la mémoire hiérarchique
 `define DIFT_H 1
+
+//ligne ci-dessous à décommenter pour utiliser le DIFT étendu à la mémoire
+`define DIFT_H 1
