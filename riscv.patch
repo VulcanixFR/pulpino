@@ -20898,7 +20898,7 @@ index 0000000..f5cbdeb
 +
 +endmodule
 diff --git a/load_store_unit.sv b/load_store_unit.sv
-index 9383ad8..4487df3 100644
+index 9383ad8..be38d53 100644
 --- a/load_store_unit.sv
 +++ b/load_store_unit.sv
 @@ -23,6 +23,7 @@
@@ -21020,7 +21020,7 @@ index 9383ad8..4487df3 100644
        end
      end
    end
-@@ -321,12 +367,257 @@ module riscv_load_store_unit
+@@ -321,12 +367,252 @@ module riscv_load_store_unit
    // output to register file
    assign data_rdata_ex_o = (data_rvalid_i == 1'b1) ? data_rdata_ext : rdata_q;
  
@@ -21037,11 +21037,11 @@ index 9383ad8..4487df3 100644
 +  begin
 +    case (rdata_offset_q_tag)
 +      3'b000: rdata_w_ext_tag = data_rdata_i_tag[5:0];
-+      3'b001: rdata_w_ext_tag = {data_rdata_i_tag[0],   rdata_q_tag[5:1]};
-+      3'b010: rdata_w_ext_tag = {data_rdata_i_tag[1:0], rdata_q_tag[5:2]};
-+      3'b011: rdata_w_ext_tag = {data_rdata_i_tag[2:0], rdata_q_tag[5:3]};
-+      3'b100: rdata_w_ext_tag = {data_rdata_i_tag[3:0], rdata_q_tag[5:4]};
-+      3'b101: rdata_w_ext_tag = {data_rdata_i_tag[4:0], rdata_q_tag[5]};
++      3'b001: rdata_w_ext_tag = {2'b00, data_rdata_i_tag[0],   rdata_q_tag[3:1]};
++      3'b010: rdata_w_ext_tag = {2'b00, data_rdata_i_tag[1:0], rdata_q_tag[3:2]};
++      3'b011: rdata_w_ext_tag = {2'b00, data_rdata_i_tag[2:0], rdata_q_tag[3]};
++      3'b100: rdata_w_ext_tag = {4'b0000, rdata_q_tag[5:4]};
++      3'b101: rdata_w_ext_tag = {4'b0000, rdata_q_tag[4], rdata_q_tag[5]};
 +    endcase
 +  end
 +
@@ -21050,37 +21050,32 @@ index 9383ad8..4487df3 100644
 +    case (rdata_offset_q_tag)
 +      3'b000:
 +      begin
-+        rdata_h_ext_tag = {3'b000, data_rdata_i_tag[1:0]};
++        rdata_h_ext_tag = {4'b0000, data_rdata_i_tag[1:0]};
 +      end
 +
 +      3'b001:
 +      begin
-+        rdata_h_ext_tag = {3'b000, data_rdata_i_tag[2:1]};
++        rdata_h_ext_tag = {4'b0000, data_rdata_i_tag[2:1]};
 +      end
 +
 +      3'b010:
 +      begin
-+        rdata_h_ext_tag = {3'b000, data_rdata_i_tag[3:2]};
++        rdata_h_ext_tag = {4'b0000, data_rdata_i_tag[3:2]};
 +      end
 +
 +      3'b011:
 +      begin
-+        rdata_h_ext_tag = {3'b000, data_rdata_i_tag[4:3]};
++        rdata_h_ext_tag = {4'b0000, data_rdata_i_tag[0], rdata_q_tag[3]};
 +      end
 +
-+      3'b100:
++      3'b100, 3'b101:
 +      begin
-+        rdata_h_ext_tag = {3'b000, data_rdata_i_tag[5:4]};
-+      end
-+
-+      3'b101:
-+      begin
-+        rdata_h_ext_tag = {3'b000, data_rdata_i_tag[0], data_rdata_i_tag[5]};
++        rdata_h_ext_tag = {4'b0000, data_rdata_i_tag[5:4]};
 +      end
 +
 +      default:
 +      begin
-+        rdata_h_ext_tag = 5'b00000;
++        rdata_h_ext_tag = 6'b000000;
 +      end
 +    endcase
 +  end
@@ -21090,37 +21085,37 @@ index 9383ad8..4487df3 100644
 +    case (rdata_offset_q_tag)
 +      3'b00:
 +      begin
-+        rdata_b_ext_tag = {4'b0000, data_rdata_i_tag[0]};
++        rdata_b_ext_tag = {5'b00000, data_rdata_i_tag[0]};
 +      end
 +
 +      3'b001:
 +      begin
-+        rdata_b_ext_tag = {4'b0000, data_rdata_i_tag[1]};
++        rdata_b_ext_tag = {5'b00000, data_rdata_i_tag[1]};
 +      end
 +
 +      3'b010:
 +      begin
-+        rdata_b_ext_tag = {4'b0000, data_rdata_i_tag[2]};
++        rdata_b_ext_tag = {5'b00000, data_rdata_i_tag[2]};
 +      end
 +
 +      3'b011:
 +      begin
-+        rdata_b_ext_tag = {4'b0000, data_rdata_i_tag[3]};
++        rdata_b_ext_tag = {5'b00000, data_rdata_i_tag[3]};
 +      end
 +
 +      3'b100:
 +      begin
-+        rdata_b_ext_tag = {4'b0000, data_rdata_i_tag[4]};
++        rdata_b_ext_tag = {5'b00000, data_rdata_i_tag[4]};
 +      end
 +
 +      3'b101:
 +      begin
-+        rdata_b_ext_tag = {4'b0000, data_rdata_i_tag[5]};
++        rdata_b_ext_tag = {5'b00000, data_rdata_i_tag[5]};
 +      end
 +
 +      default:
 +      begin
-+        rdata_b_ext_tag = 5'b00000;
++        rdata_b_ext_tag = 6'b000000;
 +      end
 +    endcase
 +  end
@@ -21132,7 +21127,7 @@ index 9383ad8..4487df3 100644
 +      3'b001:       data_rdata_ext_tag = rdata_h_ext_tag;
 +      3'b010,3'b011: data_rdata_ext_tag = rdata_b_ext_tag;
 +      3'b100:       data_rdata_ext_tag = rdata_h_ext_tag;
-+      3'b101:       data_rdata_ext_tag = rdata_h_ext_tag;
++      3'b101:       data_rdata_ext_tag = rdata_b_ext_tag;
 +    endcase
 +  end
 +
