@@ -19720,6 +19720,56 @@ index 06daf25..99145e6 100644
 +	assign ex_valid_o = (alu_ready & mult_ready & lsu_ready_ex_i & wb_ready_i);
  
  endmodule
+diff --git a/hierarchy_check.sv b/hierarchy_check.sv
+new file mode 100644
+index 0000000..0dba728
+--- /dev/null
++++ b/hierarchy_check.sv
+@@ -0,0 +1,43 @@
++////////////////////////////////////////////////////////////////////////////////
++// Engineer        Jonathan Dumaz                                             //
++//                                                                            //
++// Design Name:    Hierarchy check                                            //
++// Project Name:   RI5CY                                                      //
++// Language:       SystemVerilog                                              //
++//                                                                            //
++// Description:    This unit raises an exception if a check is enabled and    //
++//                 if the hierarchy tag in input is greater than the          //
++//								 hierarchy status currently set in the THR                  //
++////////////////////////////////////////////////////////////////////////////////
++
++import riscv_defines::*;
++`include "riscv_config.sv"
++
++`ifdef DIFT_H
++module riscv_hierarchy_check
++(
++  input  logic [31:0] thr_i,                        //thr register
++  input  logic [1:0]  cmp_i,									      //hierarchy source tag
++  input  logic        activate_hierarchy_check_i,   //to activate hierarchy check only when necessary
++  output logic        exception_o
++);
++
++  logic [1:0] current_access;
++  
++  assign current_access[THR_CURRENT_LOW] = thr_i[THR_CURRENT_LOW];
++  assign current_access[THR_CURRENT_HIGH] = thr_i[THR_CURRENT_HIGH];
++
++  always_comb
++  begin
++    exception_o = 1'b0;
++    if (activate_hierarchy_check_i) begin
++      if (current_access < cmp_i) begin
++        exception_o = 1'b1;
++      end else begin
++        exception_o = 1'b0;
++      end
++    end
++  end
++
++endmodule
++`endif
+\ No newline at end of file
 diff --git a/id_stage.sv b/id_stage.sv
 index 01389e1..288bb9a 100644
 --- a/id_stage.sv
@@ -20818,10 +20868,10 @@ index 7a83e27..477d9dd 100644
  
 diff --git a/load_check.sv b/load_check.sv
 new file mode 100644
-index 0000000..9d699b3
+index 0000000..29811c9
 --- /dev/null
 +++ b/load_check.sv
-@@ -0,0 +1,48 @@
+@@ -0,0 +1,74 @@
 +////////////////////////////////////////////////////////////////////////////////
 +// Engineer        Christian Palmiero - cp3025@columbia.edu                   //
 +//                                                                            //
@@ -20837,16 +20887,21 @@ index 0000000..9d699b3
 +////////////////////////////////////////////////////////////////////////////////
 +
 +import riscv_defines::*;
++`include "riscv_config.sv"
 +
 +module riscv_load_check
 +(
-+  input  logic        regfile_wdata_wb_i_tag,  // M[RS1+offset]: source tag
-+  input  logic        rs1_i_tag,               // RS1: source address tag
-+  input  logic        regfile_dest_tag,        // RD: destination tag
-+  input  logic [31:0] tcr_i,
++  input  logic        regfile_wdata_wb_i_tag,   // M[RS1+offset]: source tag
++  input  logic        rs1_i_tag,                // RS1: source address tag
++  input  logic        regfile_dest_tag,         // RD: destination tag
++  input  logic [31:0] tcr_i,                    // tcr register
 +  input  logic        regfile_we_wb_i,
-+
 +  output logic        exception_o
++  `ifdef DIFT_H
++  ,
++  input  logic [31:0] thr_i,                    // thr register
++  input  logic [1:0]  regfile_wdata_wb_i_htag  // M[RS1+offset]: source hierarchic tag
++  `endif
 +);
 +
 +  logic  check_s;
@@ -20857,16 +20912,37 @@ index 0000000..9d699b3
 +  assign check_sa = tcr_i[LOADSTORE_CHECK_SA];
 +  assign check_d  = tcr_i[LOADSTORE_CHECK_D];
 +
++  logic exception_o_tag;
 +  always_comb
 +  begin
-+    exception_o     = 1'b0;
++    exception_o_tag     = 1'b0;
 +    if (regfile_we_wb_i) begin
 +      if ((regfile_wdata_wb_i_tag & check_s) || (rs1_i_tag & check_sa) || (regfile_dest_tag & check_d)) begin
-+        exception_o = 1'b1;
++        exception_o_tag = 1'b1;
 +      end else begin
-+        exception_o = 1'b0;
++        exception_o_tag = 1'b0;
 +      end
 +    end
++  end
++
++  `ifdef DIFT_H
++  logic exception_o_h;
++  riscv_hierarchy_check hierarchy_check_i
++  (
++    .thr_i                        (thr_i),
++    .cmp_i                        (regfile_wdata_wb_i_htag),
++    .activate_hierarchy_check_i   (regfile_we_wb_i),
++    .exception_o                  (exception_o_h)
++  );
++  `endif
++
++  always_comb
++  begin 
++    `ifdef DIFT_H
++      exception_o = exception_o_h;
++    `else
++      exception_o = exception_o_tag;
++    `endif
 +  end
 +
 +endmodule
