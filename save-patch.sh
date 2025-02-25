@@ -1,7 +1,10 @@
 #!/bin/bash
-source set_env.sh
+if [ $# -eq 0 ]; then
+    echo "./save-patch.sh <patch_name>"
+    exit 1
+fi
 
-PATCH=$ROOT_DIR/riscv.patch
+PATCH=$ROOT_DIR/patches/$1.patch
 
 # Check if the patch file exists before attempting to remove it
 if [ -f "$PATCH" ]; then
@@ -12,14 +15,14 @@ fi
 
 # Check if the directory exists before attempting to change into it
 if [ -d "$ROOT_DIR/ips/riscv" ]; then
-    cd "$ROOT_DIR/ips/riscv" || exit
+    cd "$ROOT_DIR/ips/riscv"
 else
     echo "Error: Directory does not exist: $ROOT_DIR/ips/riscv"
     exit 1
 fi
 
 git add . --all
-git diff --cached f5475852ec3ab6895ef5da78f3ceb70fbacbd091 > $PATCH
+git diff --cached > $PATCH
 git reset .
 
-cd $ROOT_DIR || exit
+cd $ROOT_DIR

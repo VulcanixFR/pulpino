@@ -726,13 +726,13 @@ const struct riscv_opcode riscv_builtin_opcodes[] =
 {"p.abs",   		"Xpulpv0", "d,s",   	MATCH_ABS,   				MASK_PALUS, 	match_opcode, 	WR_xd|RD_xs1},
 
 // DIFT
-{"p.set",   		"Xpulpv0", "d",   	  MATCH_SET,   				MASK_SET, 	  match_opcode, 	WR_xd},
+{"p.set",   		"Xpulpv0", "d",   	  MATCH_SET,   				MASK_SET, 	  match_opcode, 	WR_xd|RD_xs1},
 {"p.spsw",  		"Xpulpv0", "t,q(s)",  MATCH_SPSW,        	MASK_SPSW,    match_opcode,	  RD_xs1|RD_xs2},
 {"p.spsh",      "Xpulpv0", "t,q(s)",  MATCH_SPSH,         MASK_SPSH,    match_opcode,   RD_xs1|RD_xs2},
 {"p.spsb",      "Xpulpv0", "t,q(s)",  MATCH_SPSB,         MASK_SPSB,    match_opcode,   RD_xs1|RD_xs2},
 {"p.hmem",      "Xpulpv0", "t,q(s)",  MATCH_HMEM,         MASK_HMEM,    match_opcode,   RD_xs1|RD_xs2},
-{"p.hmark",     "Xpulpv0", "s,t",     MATCH_HMARK,        MASK_HMARK,   match_opcode,   RD_xs1|RD_xs2},
-// {"p.hset",      "Xpulpv0", "d,s",     MATCH_HSET,         MASK_HSET,    match_opcode,   WR_xd|RD_xs1},
+{"p.hmark",     "Xpulpv0", "d,j",     MATCH_HMARK,        MASK_HMARK,   match_opcode,   WR_xd|RD_xs1},
+{"p.hset",      "Xpulpv0", "d,j",     MATCH_HSET,         MASK_HSET,    match_opcode,   WR_xd|RD_xs1},
 
 
 /* hardware loops */
@@ -856,8 +856,8 @@ const struct riscv_opcode riscv_builtin_opcodes[] =
 {"p.spsh",      "Xpulpv1", "t,q(s)",  MATCH_SPSH,         MASK_SPSH,    match_opcode,   RD_xs1|RD_xs2},
 {"p.spsb",      "Xpulpv1", "t,q(s)",  MATCH_SPSB,         MASK_SPSB,    match_opcode,   RD_xs1|RD_xs2},
 {"p.hmem",      "Xpulpv1", "t,q(s)",  MATCH_HMEM,         MASK_HMEM,    match_opcode,   RD_xs1|RD_xs2},
-{"p.hmark",     "Xpulpv1", "s,t",     MATCH_HMARK,        MASK_HMARK,   match_opcode,   RD_xs1|RD_xs2},
-// {"p.hset",      "Xpulpv1", "d,s",       MATCH_HSET,         MASK_HSET,    match_opcode,   WR_xd|RD_xs1},
+{"p.hmark",     "Xpulpv1", "d,j",     MATCH_HMARK,        MASK_HMARK,   match_opcode,   WR_xd|RD_xs1},
+{"p.hset",      "Xpulpv1", "d,j",     MATCH_HSET,         MASK_HSET,    match_opcode,   WR_xd|RD_xs1},
 
 /* hardware loops */
 
@@ -938,8 +938,8 @@ const struct riscv_opcode riscv_builtin_opcodes[] =
 {"p.spsh",      "Xpulpv2", "t,q(s)",  MATCH_SPSH,         MASK_SPSH,    match_opcode,   RD_xs1|RD_xs2},
 {"p.spsb",      "Xpulpv2", "t,q(s)",  MATCH_SPSB,         MASK_SPSB,    match_opcode,   RD_xs1|RD_xs2},
 {"p.hmem",      "Xpulpv2", "t,q(s)",  MATCH_HMEM,         MASK_HMEM,    match_opcode,   RD_xs1|RD_xs2},
-{"p.hmark",     "Xpulpv2", "s,t",     MATCH_HMARK,        MASK_HMARK,   match_opcode,   RD_xs1|RD_xs2},
-// {"p.hset",      "Xpulpv2", "d,s",       MATCH_HSET,         MASK_HSET,    match_opcode,   WR_xd|RD_xs1},
+{"p.hmark",     "Xpulpv2", "d,j",     MATCH_HMARK,        MASK_HMARK,   match_opcode,   WR_xd|RD_xs1},
+{"p.hset",      "Xpulpv2", "d,j",     MATCH_HSET,         MASK_HSET,    match_opcode,   WR_xd|RD_xs1},
 
 // {"p.avgu",  		"Xpulpv2", "d,s,t", 	MATCH_AVGU,  				MASK_PALU,  	match_opcode,	WR_xd|RD_xs1|RD_xs2},
 {"p.slet",  		"Xpulpv2", "d,s,t", 	MATCH_SLET,  				MASK_PALU,  	match_opcode,	WR_xd|RD_xs1|RD_xs2},
@@ -1384,8 +1384,8 @@ const struct riscv_opcode riscv_builtin_opcodes[] =
 {"p.spsh",      "Xpulpv3", "t,q(s)",  MATCH_SPSH,         MASK_SPSH,    match_opcode,   RD_xs1|RD_xs2},
 {"p.spsb",      "Xpulpv3", "t,q(s)",  MATCH_SPSB,         MASK_SPSB,    match_opcode,   RD_xs1|RD_xs2},
 {"p.hmem",      "Xpulpv3", "t,q(s)",  MATCH_HMEM,         MASK_HMEM,    match_opcode,   RD_xs1|RD_xs2},
-{"p.hmark",     "Xpulpv3", "s,t",     MATCH_HMARK,        MASK_HMARK,   match_opcode,   RD_xs1|RD_xs2},
-// {"p.hset",      "Xpulpv3", "d,s",       MATCH_HSET,         MASK_HSET,    match_opcode,   WR_xd|RD_xs1},
+{"p.hmark",     "Xpulpv3", "d,j",     MATCH_HMARK,        MASK_HMARK,   match_opcode,   WR_xd|RD_xs1},
+{"p.hset",      "Xpulpv3", "d,j",     MATCH_HSET,         MASK_HSET,    match_opcode,   WR_xd|RD_xs1},
 
 // {"p.avgu",  		"Xpulpv3", "d,s,t", 	MATCH_AVGU,  				MASK_PALU,  	match_opcode,	WR_xd|RD_xs1|RD_xs2},
 {"p.slet",  		"Xpulpv3", "d,s,t", 	MATCH_SLET,  				MASK_PALU,  	match_opcode,	WR_xd|RD_xs1|RD_xs2},

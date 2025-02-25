@@ -44,21 +44,19 @@ setup:
     p.spsh  x0, 8(t2)
 
     ## Marquage de '!' à 1
-    p.spsh  x0, 13(t2)
+    p.spsb  x0, 13(t2)
 
     # Instructions du H-DIFT
 
     ## Marquage de t4 à la sécurité 10
-    addi    t6, x0, 0b10
-    p.hmark t4, t6
+    p.hmark t4, 0b10
 
     ## Marquage de `Hell` à la sécurité 11
-    addi    t6, x0, 0b11
     p.hmem  x0, 0(t2)
 
     ## Changement de sécurité et saut
-    # p.hset  x0, t6
-    # jal     ra, f1
+    p.hset  x0, 0b11
+    jal     ra, f1
 
     ## Changement de sécurité et saut
     
@@ -67,9 +65,10 @@ setup:
     sw   ra, 0(sp)
 
     ### On saute !
+    addi    t6, x0, 0b11
     lui     t4, %hi(f2)
     addi    t4, t4, %lo(f2)
-    p.hmark t4, t6          # <- On marque le niveau de sécurité appelé à 3
+    p.hmark t4, 0b11         # <- On marque le niveau de sécurité appelé à 3
     jalr    ra, t4
 
     ### On enlève ra du stack

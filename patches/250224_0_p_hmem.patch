@@ -1,0 +1,239 @@
+diff --git a/cs_registers.sv b/cs_registers.sv
+index b2086d5..def4328 100644
+--- a/cs_registers.sv
++++ b/cs_registers.sv
+@@ -330,7 +330,7 @@ module riscv_cs_registers
+       tpr_q = 32'b00000000000000001010100010100010;
+       tcr_q = 32'b00000000001101000001100000000000;
+     `ifdef DIFT_H
+-      thr_q = 32'b00000000000000000000000000000000;
++      thr_q = 32'b00000000000000000000000000000010;
+     `endif
+     `endif
+ 
+diff --git a/decoder.sv b/decoder.sv
+index 1c92b51..3e3bb23 100644
+--- a/decoder.sv
++++ b/decoder.sv
+@@ -1012,7 +1012,13 @@ module riscv_decoder
+           2'b00: data_type_o = 2'b00; // SW (p.spsw)
+           2'b01: data_type_o = 2'b01; // SH (p.spsh)
+           2'b10: data_type_o = 2'b10; // SB (p.spsb)
+-          2'b11: data_type_o = 2'b00; // SW (p.hmem)
++          2'b11: begin                // SW (p.hmem)
++            `ifdef DIFT_H
++            data_type_o = 2'b00;
++            `else
++            illegal_insn_o = 1'b1;
++            `endif
++          end
+         endcase
+ 
+       end
+diff --git a/id_stage.sv b/id_stage.sv
+index 9364a32..56d8c63 100644
+--- a/id_stage.sv
++++ b/id_stage.sv
+@@ -230,6 +230,11 @@ module riscv_id_stage
+     output logic        register_set_o_tag,                // To EX
+     output logic        is_store_post_o_tag,               // To EX
+     output logic        memory_set_o_tag                   // To EX
++    `ifdef DIFT_H
++    ,
++    output logic        memory_hierarchy_set_o_tag,        // To EX
++    output logic [1:0]  hierarchy_o_tag                    // To EX
++    `endif
+ `endif
+ );
+ 
+@@ -416,6 +421,11 @@ module riscv_id_stage
+   logic        register_set_tag;
+   logic        is_store_post_tag;
+   logic        memory_set_tag;
++`ifdef DIFT_H
++  logic        memory_set_hierarchy;
++  logic [1:0]  hierarchy_tag;
++`endif
++
+ `endif
+ 
+   assign instr = instr_rdata_i;
+@@ -1033,6 +1043,13 @@ module riscv_id_stage
+     .register_set_o                  ( register_set_tag          ),
+     .is_store_post_o                 ( is_store_post_tag         ),
+     .memory_set_o                    ( memory_set_tag            )
++
++    `ifdef DIFT_H
++    ,
++    .thr_i                           ( thr_i                     ),
++    .memory_set_hierarchy_o          ( memory_set_hierarchy      ),
++    .hierarchy_tag_o                 ( hierarchy_tag             )
++    `endif
+   );
+ `endif
+ 
+@@ -1526,6 +1543,10 @@ module riscv_id_stage
+       register_set_o_tag          <= '0;
+       is_store_post_o_tag         <= '0;
+       memory_set_o_tag            <= '0;
++    `ifdef DIFT_H
++      memory_hierarchy_set_o_tag  <= '0;
++      hierarchy_o_tag             <= '0;
++    `endif  
+       regfile_alu_waddr_ex_o_tag  <= '0;
+       store_dest_addr_ex_o_tag    <= '0;
+       store_source_ex_o_tag       <= '0;
+@@ -1549,6 +1570,10 @@ module riscv_id_stage
+           register_set_o_tag            <= register_set_tag;
+           is_store_post_o_tag           <= is_store_post_tag;
+           memory_set_o_tag              <= memory_set_tag;
++          `ifdef DIFT_H
++          memory_hierarchy_set_o_tag    <= memory_set_hierarchy;
++          hierarchy_o_tag               <= hierarchy_tag;
++          `endif
+           if (is_store) begin
+             if (enable_a) begin
+               alu_operand_a_ex_o_tag    <= alu_operand_a_tag;  // RS1: destination address tag
+diff --git a/include/riscv_config.sv b/include/riscv_config.sv
+index 3fd2afb..3d070b0 100644
+--- a/include/riscv_config.sv
++++ b/include/riscv_config.sv
+@@ -33,4 +33,4 @@
+ `define DIFT 1
+ 
+ //ligne ci-dessous à décommenter pour utiliser le DIFT étendu à la mémoire
+-`define DIFT_H 1
+\ No newline at end of file
++`define DIFT_H 1
+diff --git a/load_store_unit.sv b/load_store_unit.sv
+index 4487df3..dd126a5 100644
+--- a/load_store_unit.sv
++++ b/load_store_unit.sv
+@@ -88,7 +88,7 @@ module riscv_load_store_unit
+ 
+ `ifdef DIFT
+   logic         data_we_q_tag;               // Activation d'écriture pour les tags
+-`ifdef DIFT_H
++`ifdef DIFT_H_ca_marche_pas
+   logic [5:0]   rdata_q_tag;                 // Tags lus
+   logic [2:0]   rdata_offset_q_tag;          // Décalage dans le registre pour les tags
+ `else
+@@ -218,7 +218,7 @@ endcase; // case (wdata_offset)
+     begin
+       data_type_q_tag    <= data_type_ex_i;
+       data_we_q_tag      <= data_we_ex_i_tag;
+-`ifdef DIFT_H
++`ifdef DIFT_H_ca_marche_pas
+       rdata_offset_q_tag <= data_addr_int[2:0];
+ `else
+       rdata_offset_q_tag <= data_addr_int[1:0];
+@@ -369,7 +369,7 @@ endcase; // case (wdata_offset)
+ 
+ `ifdef DIFT
+   
+-`ifdef DIFT_H
++`ifdef DIFT_H_ca_marche_pas
+   logic [5:0] data_rdata_ext_tag;
+ 
+   logic [5:0] rdata_w_ext_tag;
+diff --git a/mode_tag.sv b/mode_tag.sv
+index 0b973cd..71fc367 100644
+--- a/mode_tag.sv
++++ b/mode_tag.sv
+@@ -12,6 +12,8 @@
+ ////////////////////////////////////////////////////////////////////////////////
+ 
+ import riscv_defines::*;
++`include "riscv_config.sv" // Inclure un fichier de configuration pour RISC-V
++
+ 
+ module riscv_mode_tag
+ (
+@@ -26,6 +28,13 @@ module riscv_mode_tag
+   output logic                      register_set_o,
+   output logic                      is_store_post_o,
+   output logic                      memory_set_o
++
++  `ifdef DIFT_H
++  ,
++  input  logic [31:0]               thr_i,
++  output logic                      memory_set_hierarchy_o,
++  output logic [1:0]                hierarchy_tag_o
++  `endif
+ );
+ 
+   always_comb
+@@ -34,6 +43,8 @@ module riscv_mode_tag
+     register_set_o               = 1'b0;
+     memory_set_o                 = 1'b0;
+     is_store_post_o              = 1'b0;
++    memory_set_hierarchy_o       = 1'b0; 
++    hierarchy_tag_o              = 2'b00;
+ 
+     unique case (instr_rdata_i[6:0])
+ 
+@@ -75,11 +86,7 @@ module riscv_mode_tag
+ 
+       OPCODE_STORE
+       : begin
+-        if(instr_rdata_i[14:12] == 3'b111) begin
+-          memory_set_o = 1'b1;
+-        end else begin
+           alu_operator_o_mode  = tpr_i[LOADSTORE_HIGH:LOADSTORE_LOW];
+-        end
+       end
+ 
+       OPCODE_STORE_POST
+@@ -238,6 +245,26 @@ module riscv_mode_tag
+           endcase
+         end
+       end
++
++      OPCODE_DIFT_STORE: begin
++
++        unique case (instr_rdata_i[13:12])
++
++          2'b11: begin
++            // p.hmem
++            memory_set_hierarchy_o = 1'b1;
++            hierarchy_tag_o <= thr_i[1:0];
++          end
++
++          default: begin
++            // p.sps{w,h,b} 
++            memory_set_o = 1'b1;
++          end
++
++        endcase
++
++      end
++
+       default: ;
+     endcase
+   end
+diff --git a/riscv_core.sv b/riscv_core.sv
+index 2c18e7c..d655cb4 100644
+--- a/riscv_core.sv
++++ b/riscv_core.sv
+@@ -300,6 +300,10 @@ module riscv_core
+   logic        store_dest_addr_tag;
+   logic        store_source_tag;
+   logic        use_store_ops;
++  `ifdef DIFT_H
++  logic memory_set_hierarchy;
++  logic [1:0] hierarchy_tag_id_o;
++  `endif
+ `endif
+ 
+   //////////////////////////////////////////////////////////////////////////////////////////////
+@@ -616,6 +620,10 @@ module riscv_core
+     .register_set_o_tag           ( register_set_tag         ),
+     .is_store_post_o_tag          ( is_store_post_tag        ),
+     .memory_set_o_tag             ( memory_set_tag           ),
++    `ifdef DIFT_H
++    .memory_hierarchy_set_o_tag   ( memory_set_hierarchy ),
++    .hierarchy_o_tag              ( hierarchy_tag_id_o   ),
++    `endif
+     .regfile_alu_waddr_ex_o_tag   ( regfile_alu_waddr_tag    )
+ `endif
+   );

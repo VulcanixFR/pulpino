@@ -1262,7 +1262,7 @@
 #define MASK_V19_WFI  0xffffffff
 
 /* DIFT */
-#define MATCH_SET   0Xb4000033
+#define MATCH_SET   0x0000003b
 #define MASK_SET    0xfffff07f
 
 // Modif 2025 : Opcode 0x1b
@@ -1282,12 +1282,12 @@
 #define MATCH_HMEM  0x0000301B
 
 // Ajout p.hmark
-#define MASK_HMARK  0xFE007FFF
-#define MATCH_HMARK 0xB4001033
+#define MASK_HMARK  0x000FF07F
+#define MATCH_HMARK 0x0000103b
 
 // Ajout p.hset
-#define MASK_HSET   0xFE0FFFFF
-#define MATCH_HSET  0xB4002033
+#define MASK_HSET   0x000FF07F
+#define MATCH_HSET  0x0000203b
 
 
 #endif
