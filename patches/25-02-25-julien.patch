@@ -1,0 +1,103 @@
+diff --git a/decoder.sv b/decoder.sv
+index 3e3bb23..2d9820a 100644
+--- a/decoder.sv
++++ b/decoder.sv
+@@ -456,8 +456,6 @@ module riscv_decoder
+       end
+ 
+       OPCODE_OP: begin  // Register-Register ALU operation
+-        // Avec cette implémentation, p.set est l'équivalent d'un nop
+-        if(instr_rdata_i[31:25] != 7'b1011010) begin // ¬ p.set
+           regfile_alu_we = 1'b1;
+           rega_used_o    = 1'b1;
+ 
+@@ -628,7 +626,6 @@ module riscv_decoder
+               end
+             endcase
+           end
+-        end
+       end
+ 
+       OPCODE_PULP_OP: begin  // PULP specific ALU instructions with three source operands
+@@ -1022,6 +1019,20 @@ module riscv_decoder
+         endcase
+ 
+       end
++
++      OPCODE_DIFT_IMM : begin
++
++        unique case (instr_rdata_i[14:12])
++          3'b000: begin end // p.set
++          `ifdef DIFT_H
++          3'b001: begin end // p.hmark
++          3'b010: begin end // p.hset
++          `endif
++          default: illegal_insn_o = 1'b1; 
++        endcase
++
++      end
++
+       `endif
+ 
+       default: begin
+diff --git a/include/riscv_defines.sv b/include/riscv_defines.sv
+index 477d9dd..669ca58 100644
+--- a/include/riscv_defines.sv
++++ b/include/riscv_defines.sv
+@@ -63,6 +63,7 @@ parameter REGC_ZERO = 2'b11;
+ 
+ // DIFT custom
+ parameter OPCODE_DIFT_STORE = 7'h1b;
++parameter OPCODE_DIFT_IMM   = 7'h3b;
+ 
+ 
+ //////////////////////////////////////////////////////////////////////////////
+diff --git a/mode_tag.sv b/mode_tag.sv
+index 71fc367..028da9e 100644
+--- a/mode_tag.sv
++++ b/mode_tag.sv
+@@ -147,11 +147,7 @@ module riscv_mode_tag
+         endcase
+       end
+ 
+-      OPCODE_OP: begin
+-        if(instr_rdata_i[31:25] == 7'b1011010) begin // p.set
+-          // Indique de mettre le bit de tag de rd à 1
+-          register_set_o = 1'b1; 
+-        end else begin                               // ¬ p.set
++      OPCODE_OP: begin                               // ¬ p.set
+           unique case (instr_rdata_i[14:12])
+             3'b000: begin
+               unique case (instr_rdata_i[31:25])
+@@ -243,7 +239,6 @@ module riscv_mode_tag
+             end
+             default: ;
+           endcase
+-        end
+       end
+ 
+       OPCODE_DIFT_STORE: begin
+@@ -265,6 +260,23 @@ module riscv_mode_tag
+ 
+       end
+ 
++      OPCODE_DIFT_IMM : begin
++
++        unique case (instr_rdata_i[14:12])
++          3'b000: register_set_o = 1'b1; // p.set
++          3'b001: begin
++            
++          end
++          3'b010: begin
++
++          end
++          default: begin
++            // Rien
++          end
++        endcase
++
++      end
++
+       default: ;
+     endcase
+   end

@@ -56,7 +56,14 @@ setup:
 
     ## Changement de sécurité et saut
     p.hset  x0, 0b11
+
+    addi sp, sp, -4
+    sw   ra, 0(sp)
+
     jal     ra, f1
+
+    lw   ra, 0(sp)
+    addi sp, sp, 4
 
     ## Changement de sécurité et saut
     

@@ -628,6 +628,7 @@ const struct riscv_opcode riscv_builtin_opcodes[] =
 {"hret",      "I",   "",     MATCH_V19_HRET, MASK_V19_USHM, match_opcode,  0 },
 {"mret",      "I",   "",     MATCH_V19_MRET, MASK_V19_USHM, match_opcode,  0 },
 {"wfi",       "I",   "",     MATCH_V19_WFI, MASK_V19_WFI, match_opcode,  0 },
+{"eret",      "I",   "",     MATCH_ERET, MASK_ERET, match_opcode,  0 },
 
 
 /* PULP specific opcodes */

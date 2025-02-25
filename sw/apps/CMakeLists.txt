@@ -181,6 +181,7 @@ add_subdirectory(buffer_overflow)
 add_subdirectory(format_string)
 add_subdirectory(asm_test)
 add_subdirectory(test_load)
+add_subdirectory(c_test)
 
 if(IS_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/scratch/")
   add_subdirectory(scratch)

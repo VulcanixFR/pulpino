@@ -1289,6 +1289,9 @@
 #define MASK_HSET   0x000FF07F
 #define MATCH_HSET  0x0000203b
 
+// Ajout eret car on en a marre des bugs
+#define MASK_ERET  0xffffffff
+#define MATCH_ERET 0x10000073
 
 #endif
 #ifdef DECLARE_INSN
