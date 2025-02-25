@@ -1,0 +1,39 @@
+diff --git a/cs_registers.sv b/cs_registers.sv
+index c5d4de0..6461628 100644
+--- a/cs_registers.sv
++++ b/cs_registers.sv
+@@ -330,7 +330,7 @@ module riscv_cs_registers
+       tpr_q = 32'b00000000000000001010100010100010;
+       tcr_q = 32'b00000000001101000001100000000000;
+     `ifdef DIFT_H
+-      thr_q = 32'b00000000000000000000000000000011;
++      thr_q = 32'b00000000000000000000000000000001;
+     `endif
+     `endif
+ 
+diff --git a/id_stage.sv b/id_stage.sv
+index 288bb9a..291b0f7 100644
+--- a/id_stage.sv
++++ b/id_stage.sv
+@@ -208,7 +208,7 @@ module riscv_id_stage
+     input  logic [31:0] tcr_i,                             // From CRS
+ `ifdef DIFT_H
+     input  logic [31:0] thr_i,                             // From CRS
+-    input  logic        regfile_wdata_wb_i_htag,            // From WB stage
++    input  logic [1:0]  regfile_wdata_wb_i_htag,           // From WB stage
+ `endif
+     input  logic        pc_id_i_tag,                       // From IF
+     input  logic        pc_enable_i_tag,                   // From EX
+diff --git a/load_store_unit.sv b/load_store_unit.sv
+index 43653ed..12263ee 100644
+--- a/load_store_unit.sv
++++ b/load_store_unit.sv
+@@ -371,7 +371,7 @@ endcase; // case (wdata_offset)
+ `ifdef DIFT
+   
+ `ifdef DIFT_H
+-  assign data_rdata_ex_o_htag = 2'b10;
++  assign data_rdata_ex_o_htag = 2'b00;
+   logic [5:0] data_rdata_ext_tag;
+ 
+   logic [5:0] rdata_w_ext_tag;
