@@ -1,0 +1,276 @@
+diff --git a/check_tag.sv b/check_tag.sv
+index a9ff775..f983f0d 100644
+--- a/check_tag.sv
++++ b/check_tag.sv
+@@ -10,10 +10,10 @@
+ //                 Register and sends the proper signals to the EX stage      //
+ //                                                                            //
+ ////////////////////////////////////////////////////////////////////////////////
+-// Décodeur spécial pour la partie CHECK du TPR, qui vient s'ajouter en parallèle du décodeur déjà présent sur le processeur
+ // Il lit le champ CHECK du registre de contrôle de tag (TCR) et envoie les signaux appropriés à l'étage d'exécution (EX) en fonction de l'instruction décodée.
+ 
+ import riscv_defines::*; // Importation des définitions RISC-V
++`include "riscv_config.sv"
+ 
+ module riscv_check_tag
+ (
+diff --git a/ex_stage.sv b/ex_stage.sv
+index 99145e6..6cf82e1 100644
+--- a/ex_stage.sv
++++ b/ex_stage.sv
+@@ -95,7 +95,7 @@ module riscv_ex_stage
+ 	output logic        ex_valid_o, // EX stage gets new data
+ 	input  logic        wb_ready_i  // WB stage ready for new data
+ 
+-`ifdef DIFT // Ajout de tous les tags des registres en entrée
++`ifdef DIFT
+ 	,
+ 	input  logic [ALU_MODE_WIDTH-1:0] alu_operator_i_mode,
+ 	input  logic        alu_operand_a_i_tag,
+@@ -110,6 +110,7 @@ module riscv_ex_stage
+ 	input  logic        is_store_post_i_tag,
+ `ifdef DIFT_H
+ 	input  logic [6:0]  regfile_alu_waddr_i_tag, // Adresse du registre de destination
++	input               is_store_i,
+ `else
+ 	input  logic [4:0]  regfile_alu_waddr_i_tag,
+ `endif
+@@ -160,7 +161,7 @@ module riscv_ex_stage
+ 	assign branch_decision_o      = alu_cmp_result;
+ 	assign jump_target_o          = alu_operand_c_i;
+ 
+-`ifdef DIFT   //Mise à jour des tags
++`ifdef DIFT
+ 	// Register instruction except Load
+ 	always_comb begin
+ 		if (register_set_i_tag) begin
+@@ -260,20 +261,26 @@ module riscv_ex_stage
+ 	);
+ `endif
+ 
+-`ifdef DIFT // Récupération des infos du TCR prémachées par le décodeur
++`ifdef DIFT
+ 	assign check_a = use_store_ops_i ? store_dest_addr_i_tag : alu_operand_a_i_tag;
+ 	assign check_b = use_store_ops_i ? store_source_i_tag : alu_operand_b_i_tag;
+ 
+ 	riscv_tag_check_logic tag_check_logic_i
+ 	(
+-		.operand_a_i          ( check_a                 ),
+-		.operand_b_i          ( check_b                 ),
+-		.result_i             ( alu_result_tag          ),
+-		.check_s1_i           ( check_s1_i_tag          ),
+-		.check_s2_i           ( check_s2_i_tag          ),
+-		.check_d_i            ( check_d_i_tag           ),
+-		.is_load_i            ( regfile_we_i            ),
+-		.exception_o          ( exception_o_tag         )
++		.operand_a_i          	 ( check_a                 ),
++		.operand_b_i          	 ( check_b                 ),
++		.result_i             	 ( alu_result_tag          ),
++		.check_s1_i           	 ( check_s1_i_tag          ),
++		.check_s2_i           	 ( check_s2_i_tag          ),
++		.check_d_i            	 ( check_d_i_tag           ),
++		.is_load_i            	 ( regfile_we_i            ),
++		.exception_o          	 ( exception_o_tag         )
++		`ifdef DIFT_H
++		,
++		.is_store_i			  	 ( is_store_i              ),
++		.current_access		  	 ( ),
++		.regfile_wdata_wb_i_htag ( )
++		`endif
+ 	);
+ `endif
+ 
+diff --git a/hierarchy_reader.sv b/hierarchy_reader.sv
+new file mode 100644
+index 0000000..676a49e
+--- /dev/null
++++ b/hierarchy_reader.sv
+@@ -0,0 +1,22 @@
++////////////////////////////////////////////////////////////////////////////////
++// Engineer        Jonathan Dumaz                                             //
++//                                                                            //
++// Design Name:    Hierarchy reader                                           //
++// Project Name:   RI5CY                                                      //
++// Language:       SystemVerilog                                              //
++//                                                                            //
++// Description:    THR   decoder                                              //
++//                 This unit reads the fields of the Tag Hierarchy Register   //
++//                 and send the data about current and future level of        //
++//                 access of the fonction                                     //
++////////////////////////////////////////////////////////////////////////////////
++
++import riscv_defines::*; // Importation des définitions RISC-V
++`include "riscv_config.sv"
++
++module riscv_hierarchy_reader
++(
++    input logic  [31:0] thr_i;
++    output logic [1:0]  current_access;
++    output logic [1:0]  future_access;
++)
+\ No newline at end of file
+diff --git a/id_stage.sv b/id_stage.sv
+index 291b0f7..687bc60 100644
+--- a/id_stage.sv
++++ b/id_stage.sv
+@@ -234,7 +234,8 @@ module riscv_id_stage
+     `ifdef DIFT_H
+     ,
+     output logic        memory_hierarchy_set_o_tag,        // To EX
+-    output logic [1:0]  hierarchy_o_tag                    // To EX
++    output logic [1:0]  hierarchy_o_tag,                   // To EX
++    output logic        is_store_o                         // To EX
+     `endif
+ `endif
+ );
+@@ -1549,6 +1550,7 @@ module riscv_id_stage
+     `ifdef DIFT_H
+       memory_hierarchy_set_o_tag  <= '0;
+       hierarchy_o_tag             <= '0;
++      is_store_o                  <= '0;
+     `endif  
+       regfile_alu_waddr_ex_o_tag  <= '0;
+       store_dest_addr_ex_o_tag    <= '0;
+@@ -1576,6 +1578,7 @@ module riscv_id_stage
+           `ifdef DIFT_H
+           memory_hierarchy_set_o_tag    <= memory_set_hierarchy;
+           hierarchy_o_tag               <= hierarchy_tag;
++          is_store_o                    <= is_store;
+           `endif
+           if (is_store) begin
+             if (enable_a) begin
+diff --git a/load_store_unit.sv b/load_store_unit.sv
+index b871407..b48d9fa 100644
+--- a/load_store_unit.sv
++++ b/load_store_unit.sv
+@@ -89,7 +89,7 @@ module riscv_load_store_unit
+ 
+ `ifdef DIFT
+   logic         data_we_q_tag;               // Activation d'écriture pour les tags
+-  logic [3:0]   rdata_q_tag;                 // Maintient de la valeurs des 4 premiers tags
++  logic [3:0]   rdata_q_tag;                 // Maintien de la valeur des 4 premiers tags
+ 
+ `ifdef DIFT_H
+   logic [2:0]   rdata_offset_q_tag;          // Adresse de sélection des bits de tags à lire
+@@ -220,7 +220,7 @@ endcase; // case (wdata_offset)
+     begin
+       data_type_q_tag    <= data_type_ex_i;
+       data_we_q_tag      <= data_we_ex_i_tag;
+-`ifdef DIFT_H_ca_marche_pas
++`ifdef DIFT_H
+       rdata_offset_q_tag <= data_addr_int[2:0];
+ `else
+       rdata_offset_q_tag <= data_addr_int[1:0];
+@@ -372,7 +372,6 @@ endcase; // case (wdata_offset)
+ `ifdef DIFT
+   
+ `ifdef DIFT_H
+-  assign data_rdata_ex_o_htag = 2'b00;
+   logic [5:0] data_rdata_ext_tag;
+ 
+   logic [5:0] rdata_w_ext_tag;
+@@ -601,6 +600,9 @@ endcase; // case (wdata_offset)
+ `endif
+ 
+   assign data_rdata_ex_o_tag = (data_rvalid_i_tag == 1'b1) ? |data_rdata_ext_tag : rdata_q_tag;
++  `ifdef DIFT_H
++  assign data_rdata_ex_o_htag = data_rdata_i_tag[5:4];
++  `endif
+ `endif
+ 
+   // output to data interface
+diff --git a/mode_tag.sv b/mode_tag.sv
+index 028da9e..27f6e5e 100644
+--- a/mode_tag.sv
++++ b/mode_tag.sv
+@@ -43,8 +43,10 @@ module riscv_mode_tag
+     register_set_o               = 1'b0;
+     memory_set_o                 = 1'b0;
+     is_store_post_o              = 1'b0;
++    `ifdef DIFT_H
+     memory_set_hierarchy_o       = 1'b0; 
+     hierarchy_tag_o              = 2'b00;
++    `endif
+ 
+     unique case (instr_rdata_i[6:0])
+ 
+@@ -241,15 +243,17 @@ module riscv_mode_tag
+           endcase
+       end
+ 
++      `ifdef DIFT
+       OPCODE_DIFT_STORE: begin
+ 
+         unique case (instr_rdata_i[13:12])
+-
++          `ifdef DIFT_H
+           2'b11: begin
+             // p.hmem
+             memory_set_hierarchy_o = 1'b1;
+             hierarchy_tag_o <= thr_i[1:0];
+           end
++          `endif
+ 
+           default: begin
+             // p.sps{w,h,b} 
+@@ -259,6 +263,7 @@ module riscv_mode_tag
+         endcase
+ 
+       end
++      `endif
+ 
+       OPCODE_DIFT_IMM : begin
+ 
+diff --git a/riscv_core.sv b/riscv_core.sv
+index 497d651..df01ec1 100644
+--- a/riscv_core.sv
++++ b/riscv_core.sv
+@@ -625,8 +625,9 @@ module riscv_core
+     .is_store_post_o_tag          ( is_store_post_tag        ),
+     .memory_set_o_tag             ( memory_set_tag           ),
+ `ifdef DIFT_H
+-    .memory_hierarchy_set_o_tag   ( memory_set_hierarchy ),
+-    .hierarchy_o_tag              ( hierarchy_tag_id_o   ),
++    .memory_hierarchy_set_o_tag   ( memory_set_hierarchy     ),
++    .hierarchy_o_tag              ( hierarchy_tag_id_o       ),
++    .is_store_o                   ( is_store                 ),
+ `endif
+     .regfile_alu_waddr_ex_o_tag   ( regfile_alu_waddr_tag    )
+ `endif
+@@ -730,6 +731,10 @@ module riscv_core
+     .data_we_ex_o_tag           ( data_we_ex_tag               ),
+     .rs1_o_tag                  ( rs1_tag                      ),
+     .exception_o_tag            ( exception_tag                )
++    `ifdef DIFT_H
++    ,
++    .is_store_i                 ( is_store                     )
++    `endif
+ `endif
+   );
+ 
+diff --git a/tag_check_logic.sv b/tag_check_logic.sv
+index 3881307..2bbad6a 100644
+--- a/tag_check_logic.sv
++++ b/tag_check_logic.sv
+@@ -12,6 +12,7 @@
+ ////////////////////////////////////////////////////////////////////////////////
+ 
+ import riscv_defines::*;
++`include "riscv_config.sv"
+ 
+ module riscv_tag_check_logic
+ (
+@@ -24,6 +25,13 @@ module riscv_tag_check_logic
+   input  logic  is_load_i,
+ 
+   output logic  exception_o
++
++  `ifdef DIFT_H
++  ,
++  input is_store_i
++  input  logic [1:0] current_access,                    // thr register
++  input  logic [1:0] regfile_wdata_wb_i_htag  // M[RS1+offset]: source hierarchic tag
++  `endif
+ );
+ 
+   always_comb
