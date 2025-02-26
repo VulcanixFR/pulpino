@@ -2,7 +2,7 @@
 #include <string.h>
 #include <stdlib.h>
 
-#define DIFT
+#define DIFT 1
 
 void secretFunction()
 {
