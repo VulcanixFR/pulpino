@@ -25,7 +25,7 @@ comment_specific_line() {
 }
 
 # Motif de recherche pour la ligne à commenter
-search_pattern="define DIFT"
+search_pattern="define DIFT_H"
 
 # Liste des fichiers à modifier
 files_to_modify=(

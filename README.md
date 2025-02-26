@@ -155,6 +155,19 @@ permet de passer du processeur D-RI5CY au processeur RI5CY.
 
 permet de passer du processeur RI5CY au processeur D-RI5CY.
 
+Afin d'ajouter ou non les modifications qui permettent d'appliquer le DIFT à la
+hiérarchie mémoire, il est également possible de passer du D_RI5CY au "DH-RI5CY"
+avec le script
+
+```sh
+./D-RI5CY_to_DH-RI5CY.sh
+```
+ et de revenir au processeur D-RI5CY avec
+
+```sh
+./DH-RI5CY_to_D-RI5CY.sh
+```
+
 ## Simulations
 
 Pour simuler des programmes, entrez dans le dosser `simu` et exécutez le script
