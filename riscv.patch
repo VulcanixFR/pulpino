@@ -363,7 +363,7 @@ index 449858d..9ef9f8e 100644
        end
  
 diff --git a/cs_registers.sv b/cs_registers.sv
-index 8de09fa..c5d4de0 100644
+index 8de09fa..6461628 100644
 --- a/cs_registers.sv
 +++ b/cs_registers.sv
 @@ -22,6 +22,9 @@
@@ -479,7 +479,7 @@ index 8de09fa..c5d4de0 100644
 +      tpr_q = 32'b00000000000000001010100010100010;
 +      tcr_q = 32'b00000000001101000001100000000000;
 +    `ifdef DIFT_H
-+      thr_q = 32'b00000000000000000000000000000011;
++      thr_q = 32'b00000000000000000000000000000001;
 +    `endif
 +    `endif
 +
@@ -503,7 +503,7 @@ index 8de09fa..c5d4de0 100644
    end
  
 diff --git a/decoder.sv b/decoder.sv
-index 3144e21..3e3bb23 100644
+index 3144e21..2d9820a 100644
 --- a/decoder.sv
 +++ b/decoder.sv
 @@ -24,6 +24,8 @@
@@ -630,7 +630,7 @@ index 3144e21..3e3bb23 100644
        end
  
        OPCODE_LOAD,
-@@ -432,175 +456,178 @@ module riscv_decoder
+@@ -432,176 +456,176 @@ module riscv_decoder
        end
  
        OPCODE_OP: begin  // Register-Register ALU operation
@@ -674,8 +674,6 @@ index 3144e21..3e3bb23 100644
 -
 -          if (~instr_rdata_i[28])
 -            regb_used_o = 1'b1;
-+        // Avec cette implémentation, p.set est l'équivalent d'un nop
-+        if(instr_rdata_i[31:25] != 7'b1011010) begin // ¬ p.set
 +          regfile_alu_we = 1'b1;
 +          rega_used_o    = 1'b1;
  
@@ -807,6 +805,7 @@ index 3144e21..3e3bb23 100644
 -              illegal_insn_o = 1'b1;
 -            end
 -          endcase
+-        end
 +          if (instr_rdata_i[31]) begin
 +            // bit-manipulation instructions
 +            alu_op_b_mux_sel_o  = OP_B_IMM;
@@ -974,10 +973,10 @@ index 3144e21..3e3bb23 100644
 +              end
 +            endcase
 +          end
-         end
        end
  
-@@ -818,7 +845,6 @@ module riscv_decoder
+       OPCODE_PULP_OP: begin  // PULP specific ALU instructions with three source operands
+@@ -818,7 +842,6 @@ module riscv_decoder
          endcase
        end
  
@@ -985,7 +984,7 @@ index 3144e21..3e3bb23 100644
        ////////////////////////////////////////////////
        //  ____  ____  _____ ____ ___    _    _      //
        // / ___||  _ \| ____/ ___|_ _|  / \  | |     //
-@@ -951,6 +977,53 @@ module riscv_decoder
+@@ -951,6 +974,67 @@ module riscv_decoder
          endcase
        end
  
@@ -1034,12 +1033,26 @@ index 3144e21..3e3bb23 100644
 +        endcase
 +
 +      end
++
++      OPCODE_DIFT_IMM : begin
++
++        unique case (instr_rdata_i[14:12])
++          3'b000: begin end // p.set
++          `ifdef DIFT_H
++          3'b001: begin end // p.hmark
++          3'b010: begin end // p.hset
++          `endif
++          default: illegal_insn_o = 1'b1; 
++        endcase
++
++      end
++
 +      `endif
 +
        default: begin
          illegal_insn_o = 1'b1;
        end
-@@ -991,8 +1064,8 @@ module riscv_decoder
+@@ -991,8 +1075,8 @@ module riscv_decoder
    assign regfile_alu_we_o  = (deassert_we_i) ? 1'b0          : regfile_alu_we;
    assign data_req_o        = (deassert_we_i) ? 1'b0          : data_req;
    assign hwloop_we_o       = (deassert_we_i) ? 3'b0          : hwloop_we;
@@ -19771,7 +19784,7 @@ index 0000000..0dba728
 +`endif
 \ No newline at end of file
 diff --git a/id_stage.sv b/id_stage.sv
-index 01389e1..288bb9a 100644
+index 01389e1..291b0f7 100644
 --- a/id_stage.sv
 +++ b/id_stage.sv
 @@ -25,6 +25,7 @@
@@ -19814,7 +19827,7 @@ index 01389e1..288bb9a 100644
 +    input  logic [31:0] tcr_i,                             // From CRS
 +`ifdef DIFT_H
 +    input  logic [31:0] thr_i,                             // From CRS
-+    input  logic        regfile_wdata_wb_i_htag,            // From WB stage
++    input  logic [1:0]  regfile_wdata_wb_i_htag,           // From WB stage
 +`endif
 +    input  logic        pc_id_i_tag,                       // From IF
 +    input  logic        pc_enable_i_tag,                   // From EX
@@ -20718,20 +20731,21 @@ index 7137bae..3d070b0 100644
 +//ligne ci-dessous à décommenter pour utiliser le DIFT étendu à la mémoire
 +`define DIFT_H 1
 diff --git a/include/riscv_defines.sv b/include/riscv_defines.sv
-index 7a83e27..477d9dd 100644
+index 7a83e27..669ca58 100644
 --- a/include/riscv_defines.sv
 +++ b/include/riscv_defines.sv
-@@ -61,6 +61,9 @@ parameter REGC_S1   = 2'b10;
+@@ -61,6 +61,10 @@ parameter REGC_S1   = 2'b10;
  parameter REGC_RD   = 2'b01;
  parameter REGC_ZERO = 2'b11;
  
 +// DIFT custom
 +parameter OPCODE_DIFT_STORE = 7'h1b;
++parameter OPCODE_DIFT_IMM   = 7'h3b;
 +
  
  //////////////////////////////////////////////////////////////////////////////
  //      _    _    _   _    ___                       _   _                  //
-@@ -166,6 +169,102 @@ parameter VEC_MODE32 = 2'b00;
+@@ -166,6 +170,102 @@ parameter VEC_MODE32 = 2'b00;
  parameter VEC_MODE16 = 2'b10;
  parameter VEC_MODE8  = 2'b11;
  
@@ -20834,7 +20848,7 @@ index 7a83e27..477d9dd 100644
  
  /////////////////////////////////////////////////////////
  //    ____ ____    ____            _     _             //
-@@ -182,7 +281,6 @@ parameter CSR_OP_WRITE = 2'b01;
+@@ -182,7 +282,6 @@ parameter CSR_OP_WRITE = 2'b01;
  parameter CSR_OP_SET   = 2'b10;
  parameter CSR_OP_CLEAR = 2'b11;
  
@@ -20842,7 +20856,7 @@ index 7a83e27..477d9dd 100644
  // SPR for debugger, not accessible by CPU
  parameter SP_DVR0       = 16'h3000;
  parameter SP_DCR0       = 16'h3008;
-@@ -194,7 +292,6 @@ parameter SP_DCR_MSB = 8'h01;
+@@ -194,7 +293,6 @@ parameter SP_DCR_MSB = 8'h01;
  parameter SP_DMR_MSB = 8'h02;
  parameter SP_DSR_MSB = 8'h04;
  
@@ -20850,7 +20864,7 @@ index 7a83e27..477d9dd 100644
  ///////////////////////////////////////////////
  //   ___ ____    ____  _                     //
  //  |_ _|  _ \  / ___|| |_ __ _  __ _  ___   //
-@@ -266,7 +363,6 @@ parameter JT_JAL  = 2'b01;
+@@ -266,7 +364,6 @@ parameter JT_JAL  = 2'b01;
  parameter JT_JALR = 2'b10;
  parameter JT_COND = 2'b11;
  
@@ -20858,7 +20872,7 @@ index 7a83e27..477d9dd 100644
  ///////////////////////////////////////////////
  //   ___ _____   ____  _                     //
  //  |_ _|  ___| / ___|| |_ __ _  __ _  ___   //
-@@ -299,7 +395,6 @@ parameter EXC_OFF_ILLINSN  = 8'h84;
+@@ -299,7 +396,6 @@ parameter EXC_OFF_ILLINSN  = 8'h84;
  parameter EXC_OFF_ECALL    = 8'h88;
  parameter EXC_OFF_LSUERR   = 8'h8c;
  
@@ -21013,7 +21027,7 @@ index 0000000..f5cbdeb
 +
 +endmodule
 diff --git a/load_store_unit.sv b/load_store_unit.sv
-index 9383ad8..5f412af 100644
+index 9383ad8..b871407 100644
 --- a/load_store_unit.sv
 +++ b/load_store_unit.sv
 @@ -23,6 +23,7 @@
@@ -21137,13 +21151,14 @@ index 9383ad8..5f412af 100644
        end
      end
    end
-@@ -321,12 +369,250 @@ module riscv_load_store_unit
+@@ -321,12 +369,251 @@ module riscv_load_store_unit
    // output to register file
    assign data_rdata_ex_o = (data_rvalid_i == 1'b1) ? data_rdata_ext : rdata_q;
  
 +`ifdef DIFT
 +  
 +`ifdef DIFT_H
++  assign data_rdata_ex_o_htag = 2'b00;
 +  logic [5:0] data_rdata_ext_tag;
 +
 +  logic [5:0] rdata_w_ext_tag;
@@ -22025,10 +22040,10 @@ index 0000000..fd2e95b
 +endmodule
 diff --git a/mode_tag.sv b/mode_tag.sv
 new file mode 100644
-index 0000000..71fc367
+index 0000000..028da9e
 --- /dev/null
 +++ b/mode_tag.sv
-@@ -0,0 +1,272 @@
+@@ -0,0 +1,284 @@
 +////////////////////////////////////////////////////////////////////////////////
 +// Engineer        Christian Palmiero - cp3025@columbia.edu                   //
 +//                                                                            //
@@ -22178,11 +22193,7 @@ index 0000000..71fc367
 +        endcase
 +      end
 +
-+      OPCODE_OP: begin
-+        if(instr_rdata_i[31:25] == 7'b1011010) begin // p.set
-+          // Indique de mettre le bit de tag de rd à 1
-+          register_set_o = 1'b1; 
-+        end else begin                               // ¬ p.set
++      OPCODE_OP: begin                               // ¬ p.set
 +          unique case (instr_rdata_i[14:12])
 +            3'b000: begin
 +              unique case (instr_rdata_i[31:25])
@@ -22274,7 +22285,6 @@ index 0000000..71fc367
 +            end
 +            default: ;
 +          endcase
-+        end
 +      end
 +
 +      OPCODE_DIFT_STORE: begin
@@ -22292,6 +22302,23 @@ index 0000000..71fc367
 +            memory_set_o = 1'b1;
 +          end
 +
++        endcase
++
++      end
++
++      OPCODE_DIFT_IMM : begin
++
++        unique case (instr_rdata_i[14:12])
++          3'b000: register_set_o = 1'b1; // p.set
++          3'b001: begin
++            
++          end
++          3'b010: begin
++
++          end
++          default: begin
++            // Rien
++          end
 +        endcase
 +
 +      end
