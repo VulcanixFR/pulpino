@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <stdint.h>
 
 char str1[32] __attribute__((aligned (4)))
     = "Bonjour, je suis du C.\r\n";
@@ -56,20 +57,19 @@ int main () {
     );
     f1();
 
-    // void* func = &f2;
-    // // Test de p.hmark
-    // asm (
-    //     "addi   sp, sp, -4\n\t"
-    //     "sw     ra, 0(sp)\n\t"
-    //     "lui    t4, %%hi(%[func])\n\t"
-    //     "addi   t4, t4, %%lo(%[func])\n\t"
-    //     "p.hmark t4, 0b10\n\t"
-    //     "jalr   ra, t4\n\t"
-    //     "lw     ra, 0(sp)\n\t"
-    //     "addi   sp, sp, 4\n\t"
-    //     :
-    //     : [func] "r" (func)
-    // );
+    // Magie
+    register void *t4 asm ("t4") = &f2;
+
+    // Test de p.hmark
+    asm (
+        "addi   sp, sp, -4\n\t"
+        "sw     ra, 0(sp)\n\t"
+        "p.hmark t4, 0b10\n\t"
+        "jalr   ra, t4\n\t"
+        "lw     ra, 0(sp)\n\t"
+        "addi   sp, sp, 4\n\t"
+        :
+    );
 
     return 0; 
 }
