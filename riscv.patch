@@ -1,6 +1,6 @@
 diff --git a/check_tag.sv b/check_tag.sv
 new file mode 100644
-index 0000000..a9ff775
+index 0000000..f983f0d
 --- /dev/null
 +++ b/check_tag.sv
 @@ -0,0 +1,258 @@
@@ -16,10 +16,10 @@ index 0000000..a9ff775
 +//                 Register and sends the proper signals to the EX stage      //
 +//                                                                            //
 +////////////////////////////////////////////////////////////////////////////////
-+// Décodeur spécial pour la partie CHECK du TPR, qui vient s'ajouter en parallèle du décodeur déjà présent sur le processeur
 +// Il lit le champ CHECK du registre de contrôle de tag (TCR) et envoie les signaux appropriés à l'étage d'exécution (EX) en fonction de l'instruction décodée.
 +
 +import riscv_defines::*; // Importation des définitions RISC-V
++`include "riscv_config.sv"
 +
 +module riscv_check_tag
 +(
@@ -363,7 +363,7 @@ index 449858d..9ef9f8e 100644
        end
  
 diff --git a/cs_registers.sv b/cs_registers.sv
-index 8de09fa..6461628 100644
+index 8de09fa..0b85171 100644
 --- a/cs_registers.sv
 +++ b/cs_registers.sv
 @@ -22,6 +22,9 @@
@@ -376,7 +376,7 @@ index 8de09fa..6461628 100644
  
  import riscv_defines::*;
  
-@@ -56,7 +59,13 @@ module riscv_cs_registers
+@@ -56,7 +59,18 @@ module riscv_cs_registers
    // Interrupts
    output logic        irq_enable_o,
    output logic [31:0] mepc_o,
@@ -386,12 +386,17 @@ index 8de09fa..6461628 100644
 +  output logic [31:0] tcr_o,
 +`ifdef DIFT_H
 +  output logic [31:0] thr_o,
++
++  input logic         thr_set_hierarchy_i, // Mettre h-tag dans le tampon  
++  input logic         thr_apply_i,         // Mettre le tampon dans la partie active ([3:2] -> [1:0])         
++  input logic         thr_from_reg_i,      // Mettre h-tag dans la partie active
++  input logic [1:0]   hierarchy_tag_i,     // h-tag
 +`endif
 +`endif
    input  logic [31:0] pc_if_i,
    input  logic [31:0] pc_id_i,
    input  logic [31:0] pc_ex_i,
-@@ -131,11 +140,18 @@ module riscv_cs_registers
+@@ -131,11 +145,18 @@ module riscv_cs_registers
    logic [ 0:0] mstatus_q, mstatus_n;
    logic [ 5:0] exc_cause, exc_cause_n;
  
@@ -411,7 +416,7 @@ index 8de09fa..6461628 100644
    // | |___ ___) |  _ <  |  _ <  __/ (_| |  //
    //  \____|____/|_| \_\ |_| \_\___|\__, |  //
    //                                |___/   //
-@@ -170,6 +186,14 @@ module riscv_cs_registers
+@@ -170,6 +191,14 @@ module riscv_cs_registers
        12'h7B5: csr_rdata_int = hwlp_end_i[1];
        12'h7B6: csr_rdata_int = hwlp_cnt_i[1];
  
@@ -426,7 +431,7 @@ index 8de09fa..6461628 100644
        12'h7C0: csr_rdata_int = {29'b0, 2'b11, mestatus_q};
      endcase
    end
-@@ -185,6 +209,14 @@ module riscv_cs_registers
+@@ -185,6 +214,14 @@ module riscv_cs_registers
      hwlp_we_o    = '0;
      hwlp_regid_o = '0;
  
@@ -441,7 +446,7 @@ index 8de09fa..6461628 100644
      case (csr_addr_i)
        // mstatus: IE bit
        12'h300: if (csr_we_int) mstatus_n = csr_wdata_int[0];
-@@ -202,6 +234,14 @@ module riscv_cs_registers
+@@ -202,6 +239,14 @@ module riscv_cs_registers
        12'h7B5: if (csr_we_int) begin hwlp_we_o = 3'b010; hwlp_regid_o = 1'b1; end
        12'h7B6: if (csr_we_int) begin hwlp_we_o = 3'b100; hwlp_regid_o = 1'b1; end
  
@@ -456,7 +461,7 @@ index 8de09fa..6461628 100644
        // mestatus: machine exception status
        12'h7C0: if (csr_we_int) mestatus_n = csr_wdata_int[0];
      endcase
-@@ -268,6 +308,13 @@ module riscv_cs_registers
+@@ -268,6 +313,13 @@ module riscv_cs_registers
    assign irq_enable_o = mstatus_q[0];
    assign mepc_o       = mepc_q;
  
@@ -470,7 +475,7 @@ index 8de09fa..6461628 100644
  
    // actual registers
    always_ff @(posedge clk, negedge rst_n)
-@@ -278,6 +325,15 @@ module riscv_cs_registers
+@@ -278,6 +330,15 @@ module riscv_cs_registers
        mepc_q     <= '0;
        mestatus_q <= '0;
        exc_cause  <= '0;
@@ -479,14 +484,14 @@ index 8de09fa..6461628 100644
 +      tpr_q = 32'b00000000000000001010100010100010;
 +      tcr_q = 32'b00000000001101000001100000000000;
 +    `ifdef DIFT_H
-+      thr_q = 32'b00000000000000000000000000000001;
++      thr_q = 32'b00000000000000000000000000001111;
 +    `endif
 +    `endif
 +
      end
      else
      begin
-@@ -288,6 +344,15 @@ module riscv_cs_registers
+@@ -288,6 +349,24 @@ module riscv_cs_registers
        mestatus_q <= mestatus_n;
  
        exc_cause  <= exc_cause_n;
@@ -496,6 +501,15 @@ index 8de09fa..6461628 100644
 +      tcr_q = tcr_n;
 +    `ifdef DIFT_H
 +      thr_q = thr_n;
++      if (thr_set_hierarchy_i) begin
++        thr_q[3:2] = hierarchy_tag_i; // Mise du tag hiérarchique dans le tampon
++      end
++      if (thr_apply_i) begin
++        thr_q[1:0] = thr_q[3:2];      // Le THR est mis à jour avec la valeur du tampon
++      end
++      if (thr_from_reg_i) begin 
++        thr_q[1:0] = hierarchy_tag_i; // On met directement le THR à jour avec un nouveau tag
++      end
 +    `endif
 +    `endif
 +
@@ -19187,7 +19201,7 @@ index 0000000..e4d022a
 +
 +endmodule
 diff --git a/ex_stage.sv b/ex_stage.sv
-index 06daf25..99145e6 100644
+index 06daf25..2572bdf 100644
 --- a/ex_stage.sv
 +++ b/ex_stage.sv
 @@ -16,7 +16,7 @@
@@ -19199,7 +19213,7 @@ index 06daf25..99145e6 100644
  // Project Name:   RI5CY                                                      //
  // Language:       SystemVerilog                                              //
  //                                                                            //
-@@ -26,200 +26,344 @@
+@@ -26,200 +26,384 @@
  //                                                                            //
  ////////////////////////////////////////////////////////////////////////////////
  
@@ -19335,10 +19349,14 @@ index 06daf25..99145e6 100644
 +	output logic        ex_valid_o, // EX stage gets new data
 +	input  logic        wb_ready_i  // WB stage ready for new data
 +
-+`ifdef DIFT // Ajout de tous les tags des registres en entrée
++`ifdef DIFT
 +	,
 +	input  logic [ALU_MODE_WIDTH-1:0] alu_operator_i_mode,
++`ifdef DIFT_H
++	input  logic [2:0]  alu_operand_a_i_tag,
++`else
 +	input  logic        alu_operand_a_i_tag,
++`endif
 +	input  logic        alu_operand_b_i_tag,
 +	input  logic        alu_operand_c_i_tag,
 +	input  logic        data_we_ex_i,
@@ -19350,13 +19368,19 @@ index 06daf25..99145e6 100644
 +	input  logic        is_store_post_i_tag,
 +`ifdef DIFT_H
 +	input  logic [6:0]  regfile_alu_waddr_i_tag, // Adresse du registre de destination
++	input  logic        is_store_i,
++	input  logic [31:0] thr_i,
 +`else
 +	input  logic [4:0]  regfile_alu_waddr_i_tag,
 +`endif
 +	input  logic        store_dest_addr_i_tag,
 +	input  logic        store_source_i_tag,
 +	input  logic        use_store_ops_i,
++`ifdef DIFT_H
++	output logic [2:0]  regfile_alu_wdata_fw_o_tag,
++`else
 +	output logic        regfile_alu_wdata_fw_o_tag,
++`endif
 +	output logic        regfile_alu_we_fw_o_tag,
 +`ifdef DIFT_H
 +	output logic [6:0]  regfile_alu_waddr_fw_o_tag,
@@ -19367,6 +19391,12 @@ index 06daf25..99145e6 100644
 +	output logic        pc_enable_o_tag,
 +	output logic        data_wdata_ex_o_tag,
 +	output logic        data_we_ex_o_tag,
++
++`ifdef DIFT_H
++	input logic 		hierarchy_forward_to_reg,
++	input logic  [1:0]	hierarchy_tag,
++`endif 
++
 +	output logic        rs1_o_tag,
 +	output logic        exception_o_tag
 +`endif
@@ -19526,14 +19556,32 @@ index 06daf25..99145e6 100644
 +	assign branch_decision_o      = alu_cmp_result;
 +	assign jump_target_o          = alu_operand_c_i;
 +
-+`ifdef DIFT   //Mise à jour des tags
++`ifdef DIFT
 +	// Register instruction except Load
 +	always_comb begin
 +		if (register_set_i_tag) begin
++			
++			`ifdef DIFT_H
++		 	if (hierarchy_forward_to_reg) begin 
++				regfile_alu_wdata_fw_o_tag[2:1] = hierarchy_tag;
++				regfile_alu_wdata_fw_o_tag[0]   = '0;
++
++			end else
++				regfile_alu_wdata_fw_o_tag = 3'b001;
++				
++			`else
 +			regfile_alu_wdata_fw_o_tag = 1'b1;
++			`endif
++
 +			regfile_alu_we_fw_o_tag    = 1'b1;
++
 +		end else begin
++			`ifdef DIFT_H
++			regfile_alu_wdata_fw_o_tag[2:1] = thr_i[1:0];
++			regfile_alu_wdata_fw_o_tag[0] = alu_result_tag;
++			`else
 +			regfile_alu_wdata_fw_o_tag = alu_result_tag;
++			`endif 
 +			regfile_alu_we_fw_o_tag    = rf_enable_tag & regfile_alu_we_i & ~(is_store_post_i_tag);
 +		end
 +	end
@@ -19626,20 +19674,26 @@ index 06daf25..99145e6 100644
 +	);
 +`endif
 +
-+`ifdef DIFT // Récupération des infos du TCR prémachées par le décodeur
++`ifdef DIFT
 +	assign check_a = use_store_ops_i ? store_dest_addr_i_tag : alu_operand_a_i_tag;
 +	assign check_b = use_store_ops_i ? store_source_i_tag : alu_operand_b_i_tag;
 +
 +	riscv_tag_check_logic tag_check_logic_i
 +	(
-+		.operand_a_i          ( check_a                 ),
-+		.operand_b_i          ( check_b                 ),
-+		.result_i             ( alu_result_tag          ),
-+		.check_s1_i           ( check_s1_i_tag          ),
-+		.check_s2_i           ( check_s2_i_tag          ),
-+		.check_d_i            ( check_d_i_tag           ),
-+		.is_load_i            ( regfile_we_i            ),
-+		.exception_o          ( exception_o_tag         )
++		.operand_a_i          	 ( check_a                 ),
++		.operand_b_i          	 ( check_b                 ),
++		.result_i             	 ( alu_result_tag          ),
++		.check_s1_i           	 ( check_s1_i_tag          ),
++		.check_s2_i           	 ( check_s2_i_tag          ),
++		.check_d_i            	 ( check_d_i_tag           ),
++		.is_load_i            	 ( regfile_we_i            ),
++		.exception_o          	 ( exception_o_tag         )
++		`ifdef DIFT_H
++		,
++		.is_store_i			  	 ( is_store_i              ),
++		.thr_i					 ( thr_i                   ),
++		.regfile_wdata_wb_i_htag ( )
++		`endif
 +	);
 +`endif
 +
@@ -19783,8 +19837,49 @@ index 0000000..0dba728
 +endmodule
 +`endif
 \ No newline at end of file
+diff --git a/hierarchy_reader.sv b/hierarchy_reader.sv
+new file mode 100644
+index 0000000..68dcb21
+--- /dev/null
++++ b/hierarchy_reader.sv
+@@ -0,0 +1,34 @@
++////////////////////////////////////////////////////////////////////////////////
++// Engineer        Jonathan Dumaz                                             //
++//                                                                            //
++// Design Name:    Hierarchy reader                                           //
++// Project Name:   RI5CY                                                      //
++// Language:       SystemVerilog                                              //
++//                                                                            //
++// Description:    THR   decoder                                              //
++//                 This unit reads the fields of the Tag Hierarchy Register   //
++//                 and send the data about current and future level of        //
++//                 access of the fonction                                     //
++////////////////////////////////////////////////////////////////////////////////
++
++import riscv_defines::*; // Importation des définitions RISC-V
++`include "riscv_config.sv"
++
++module riscv_hierarchy_reader
++(
++    input logic  [31:0] thr_i;
++    output logic [1:0]  current_access_o;
++    output logic [1:0]  future_access_o;
++);
++
++    assign current_access_o = 2'b00;
++    assign future_access_o  = 2'b00;
++    always_comb
++    begin
++        current_access_o[0] = thr_i[THR_CURRENT_LOW];
++        current_access_o[1] = thr_i[THR_CURRENT_HIGH];
++        future_access_o[0] = thr_i[THR_BUFFER_LOW];
++        future_access_o[1] = thr_i[THR_BUFFER_HIGH];
++    end
++
++endmodule
+\ No newline at end of file
 diff --git a/id_stage.sv b/id_stage.sv
-index 01389e1..291b0f7 100644
+index 01389e1..0828e64 100644
 --- a/id_stage.sv
 +++ b/id_stage.sv
 @@ -25,6 +25,7 @@
@@ -19811,7 +19906,7 @@ index 01389e1..291b0f7 100644
      // MUL
      output logic [ 2:0] mult_operator_ex_o,
      output logic [31:0] mult_operand_a_ex_o,
-@@ -197,6 +196,47 @@ module riscv_id_stage
+@@ -197,6 +196,62 @@ module riscv_id_stage
      output logic        perf_jump_o,          // we are executing a jump instruction
      output logic        perf_jr_stall_o,      // jump-register-hazard
      output logic        perf_ld_stall_o       // load-use-hazard
@@ -19819,8 +19914,13 @@ index 01389e1..291b0f7 100644
 +// DIFT signals
 +`ifdef DIFT
 +    ,
-+    input  logic        regfile_wdata_wb_i_tag,            // From WB stage
++`ifdef DIFT_H           // From WB stage
++    input  logic [2:0]  regfile_wdata_wb_i_tag, 
++    input  logic [2:0]  regfile_alu_wdata_fw_i_tag,        // From tags ALU (EX stage)
++`else   
++    input  logic        regfile_wdata_wb_i_tag, 
 +    input  logic        regfile_alu_wdata_fw_i_tag,        // From tags ALU (EX stage)
++`endif  
 +    input  logic        regfile_alu_we_fw_i_tag,           // From tags ALU (EX stage)
 +    input  logic [4:0]  regfile_alu_waddr_fw_i_tag,        // From EX
 +    input  logic [31:0] tpr_i,                             // From CRS
@@ -19840,7 +19940,11 @@ index 01389e1..291b0f7 100644
 +    output logic        store_dest_addr_ex_o_tag,          // To EX
 +    output logic        store_source_ex_o_tag,             // To EX
 +    output logic        use_store_ops_ex_o,                // To EX
++`ifdef DIFT_H
++    output logic [2:0]  alu_operand_a_ex_o_tag,            // To EX
++`else
 +    output logic        alu_operand_a_ex_o_tag,            // To EX
++`endif
 +    output logic        alu_operand_b_ex_o_tag,            // To EX
 +    output logic        alu_operand_c_ex_o_tag,            // To EX
 +    output logic [4:0]  regfile_alu_waddr_ex_o_tag,        // To EX
@@ -19852,14 +19956,20 @@ index 01389e1..291b0f7 100644
 +    output logic        memory_set_o_tag                   // To EX
 +    `ifdef DIFT_H
 +    ,
-+    output logic        memory_hierarchy_set_o_tag,        // To EX
-+    output logic [1:0]  hierarchy_o_tag                    // To EX
++    output logic        is_store_o,                        // To EX
++    output logic        memory_set_hierarchy_o,            // To EX
++    output logic        register_set_hierarchy_o,          // To EX
++    output logic        thr_set_hierarchy_o,               // To EX
++    output logic        thr_apply_o,                       // To EX
++    output logic        thr_from_reg_o,                    // To EX
++
++    output logic [1:0]  hierarchy_tag_o                    // To EX
 +    `endif
 +`endif
  );
  
    logic [31:0] instr;
-@@ -205,6 +245,7 @@ module riscv_id_stage
+@@ -205,6 +260,7 @@ module riscv_id_stage
    logic        deassert_we;
  
    logic        illegal_insn_dec;
@@ -19867,7 +19977,7 @@ index 01389e1..291b0f7 100644
    logic        ebrk_insn;
    logic        eret_insn_dec;
    logic        ecall_insn_dec;
-@@ -225,7 +266,6 @@ module riscv_id_stage
+@@ -225,7 +281,6 @@ module riscv_id_stage
  
    logic        halt_id;
  
@@ -19875,7 +19985,7 @@ index 01389e1..291b0f7 100644
    // Immediate decoding and sign extension
    logic [31:0] imm_i_type;
    logic [31:0] imm_iz_type;
-@@ -249,8 +289,6 @@ module riscv_id_stage
+@@ -249,8 +304,6 @@ module riscv_id_stage
  
    logic [31:0] jump_target;       // calculated jump target (-> EX -> IF)
  
@@ -19884,22 +19994,41 @@ index 01389e1..291b0f7 100644
    // Signals running between controller and exception controller
    logic        exc_req, exc_ack;  // handshake
  
-@@ -357,6 +395,39 @@ module riscv_id_stage
+@@ -357,6 +410,65 @@ module riscv_id_stage
    logic        reg_d_alu_is_reg_b_id;
    logic        reg_d_alu_is_reg_c_id;
  
 +`ifdef DIFT
++`ifdef DIFT_H
++  logic [2:0]  regfile_data_ra_id_tag;
++  logic [2:0]  regfile_data_rb_id_tag;
++`else
 +  logic        regfile_data_ra_id_tag;
 +  logic        regfile_data_rb_id_tag;
++`endif 
++`endif 
 +  logic        regfile_data_rc_id_tag;
++`ifdef DIFT_H
++  logic [2:0]  alu_operand_a_tag;
++`else
 +  logic        alu_operand_a_tag;
++`endif 
 +  logic        alu_operand_b_tag;
 +  logic        alu_operand_c_tag;
++`ifdef DIFT_H
++  logic [2:0]  operand_a_fw_id_tag;
++  logic [2:0]  operand_b_fw_id_tag;
++`else
 +  logic        operand_a_fw_id_tag;
 +  logic        operand_b_fw_id_tag;
++`endif
 +  logic        operand_c_fw_id_tag;
 +  logic        operand_b_tag;
++`ifdef DIFT_H
++  logic [2:0]  jump_target_tag;
++`else
 +  logic        jump_target_tag;
++`endif
 +  logic [ALU_MODE_WIDTH-1:0] alu_operator_mode;
 +  logic        is_store;
 +  logic        enable_a;
@@ -19916,15 +20045,22 @@ index 01389e1..291b0f7 100644
 +  logic        is_store_post_tag;
 +  logic        memory_set_tag;
 +`ifdef DIFT_H
++  // Ajoutés au pipeline
 +  logic        memory_set_hierarchy;
-+  logic [1:0]  hierarchy_tag;
-+`endif
++  logic        register_set_hierarchy;
++  logic        thr_set_hierarchy;
++  logic        thr_apply;
++  logic        thr_from_reg;
 +
++  logic [1:0]  hierarchy_tag;
++
++  // Local
++  logic        hierarchy_violation;
 +`endif
  
    assign instr = instr_rdata_i;
  
-@@ -425,14 +496,15 @@ module riscv_id_stage
+@@ -425,14 +537,15 @@ module riscv_id_stage
    assign reg_d_alu_is_reg_b_id = (regfile_alu_waddr_fw_i == regfile_addr_rb_id) && (regb_used_dec == 1'b1) && (regfile_addr_rb_id != '0);
    assign reg_d_alu_is_reg_c_id = (regfile_alu_waddr_fw_i == regfile_addr_rc_id) && (regc_used_dec == 1'b1) && (regfile_addr_rc_id != '0);
  
@@ -19942,7 +20078,7 @@ index 01389e1..291b0f7 100644
  
    assign mult_en = mult_int_en | mult_dot_en;
  
-@@ -466,7 +538,6 @@ module riscv_id_stage
+@@ -466,7 +579,6 @@ module riscv_id_stage
      endcase
    end
  
@@ -19950,7 +20086,7 @@ index 01389e1..291b0f7 100644
    // hwloop cnt mux
    always_comb
    begin : hwloop_cnt_mux
-@@ -483,7 +554,6 @@ module riscv_id_stage
+@@ -483,7 +595,6 @@ module riscv_id_stage
    assign hwloop_regid = (|hwloop_we_int) ? hwloop_regid_int : csr_hwlp_regid_i;
    assign hwloop_we    = (|hwloop_we_int) ? hwloop_we_int    : csr_hwlp_we_i;
  
@@ -19958,13 +20094,13 @@ index 01389e1..291b0f7 100644
    //////////////////////////////////////////////////////////////////
    //      _                         _____                    _    //
    //     | |_   _ _ __ ___  _ __   |_   _|_ _ _ __ __ _  ___| |_  //
-@@ -505,8 +575,21 @@ module riscv_id_stage
+@@ -505,8 +616,21 @@ module riscv_id_stage
      endcase
    end
  
 -  assign jump_target_o = jump_target;
 +  assign jump_target_o = jump_target; // To ID
-+
+ 
 +`ifdef DIFT
 +  always_comb
 +  begin : jump_target_mux_tag
@@ -19975,13 +20111,13 @@ index 01389e1..291b0f7 100644
 +      default: jump_target_tag = regfile_data_ra_id_tag;
 +    endcase
 +  end
- 
++
 +  assign jump_target_o_tag = jump_target_tag; // To ID
 +`endif
  
    ////////////////////////////////////////////////////////
    //   ___                                 _      _     //
-@@ -549,6 +632,31 @@ module riscv_id_stage
+@@ -549,6 +673,47 @@ module riscv_id_stage
      endcase; // case (operand_a_fw_mux_sel)
    end
  
@@ -19989,13 +20125,29 @@ index 01389e1..291b0f7 100644
 +    // ALU_Op_a Mux
 +    always_comb
 +    begin : alu_operand_a_mux_tag
++    `ifdef DIFT_H
++      case (alu_op_a_mux_sel)
++        OP_A_REGA_OR_FWD:  alu_operand_a_tag = operand_a_fw_id_tag;
++        OP_A_REGB_OR_FWD:  alu_operand_a_tag = operand_b_fw_id_tag;
++        OP_A_CURRPC: begin       
++          alu_operand_a_tag[0]   = pc_id_i_tag;
++          alu_operand_a_tag[2:1] = thr_i[1:0];
++        end
++        OP_A_IMM: begin          
++          alu_operand_a_tag[0]   = 1'b0;
++          alu_operand_a_tag[2:1] = thr_i[1:0];
++        end
++        default:           alu_operand_a_tag = operand_a_fw_id_tag;
++      endcase;
++    `else
 +      case (alu_op_a_mux_sel)
 +        OP_A_REGA_OR_FWD:  alu_operand_a_tag = operand_a_fw_id_tag;
 +        OP_A_REGB_OR_FWD:  alu_operand_a_tag = operand_b_fw_id_tag;
 +        OP_A_CURRPC:       alu_operand_a_tag = pc_id_i_tag;
 +        OP_A_IMM:          alu_operand_a_tag = 1'b0;
-+        default:            alu_operand_a_tag = operand_a_fw_id_tag;
++        default:           alu_operand_a_tag = operand_a_fw_id_tag;
 +      endcase;
++    `endif
 +    end
 +
 +    // Operand a forwarding mux
@@ -20005,7 +20157,7 @@ index 01389e1..291b0f7 100644
 +        SEL_FW_EX:    operand_a_fw_id_tag = regfile_alu_wdata_fw_i_tag;
 +        SEL_FW_WB:    operand_a_fw_id_tag = regfile_wdata_wb_i_tag;
 +        SEL_REGFILE:  operand_a_fw_id_tag = regfile_data_ra_id_tag;
-+        default:       operand_a_fw_id_tag = regfile_data_ra_id_tag;
++        default:      operand_a_fw_id_tag = regfile_data_ra_id_tag;
 +      endcase;
 +    end
 +`endif
@@ -20013,7 +20165,7 @@ index 01389e1..291b0f7 100644
    //////////////////////////////////////////////////////
    //   ___                                 _   ____   //
    //  / _ \ _ __   ___ _ __ __ _ _ __   __| | | __ )  //
-@@ -586,11 +694,10 @@ module riscv_id_stage
+@@ -586,11 +751,10 @@ module riscv_id_stage
        OP_B_REGB_OR_FWD:  operand_b = operand_b_fw_id;
        OP_B_REGC_OR_FWD:  operand_b = operand_c_fw_id;
        OP_B_IMM:          operand_b = imm_b;
@@ -20026,7 +20178,7 @@ index 01389e1..291b0f7 100644
    // scalar replication for operand B and shuffle type
    always_comb
    begin
-@@ -606,7 +713,6 @@ module riscv_id_stage
+@@ -606,7 +770,6 @@ module riscv_id_stage
    // choose normal or scalar replicated version of operand b
    assign alu_operand_b = (scalar_replication == 1'b1) ? operand_b_vec : operand_b;
  
@@ -20034,7 +20186,7 @@ index 01389e1..291b0f7 100644
    // Operand b forwarding mux
    always_comb
    begin : operand_b_fw_mux
-@@ -618,6 +724,45 @@ module riscv_id_stage
+@@ -618,6 +781,45 @@ module riscv_id_stage
      endcase; // case (operand_b_fw_mux_sel)
    end
  
@@ -20073,14 +20225,14 @@ index 01389e1..291b0f7 100644
 +        SEL_FW_EX:    operand_b_fw_id_tag = regfile_alu_wdata_fw_i_tag;
 +        SEL_FW_WB:    operand_b_fw_id_tag = regfile_wdata_wb_i_tag;
 +        SEL_REGFILE:  operand_b_fw_id_tag = regfile_data_rb_id_tag;
-+        default:       operand_b_fw_id_tag = regfile_data_rb_id_tag;
++        default:      operand_b_fw_id_tag = regfile_data_rb_id_tag;
 +      endcase; // case (operand_b_fw_mux_sel)
 +    end
 +`endif
  
    //////////////////////////////////////////////////////
    //   ___                                 _    ____  //
-@@ -634,7 +779,7 @@ module riscv_id_stage
+@@ -634,7 +836,7 @@ module riscv_id_stage
      case (alu_op_c_mux_sel)
        OP_C_REGC_OR_FWD:  alu_operand_c = operand_c_fw_id;
        OP_C_REGB_OR_FWD:  alu_operand_c = operand_b_fw_id;
@@ -20089,7 +20241,7 @@ index 01389e1..291b0f7 100644
        default:            alu_operand_c = operand_c_fw_id;
      endcase // case (alu_op_c_mux_sel)
    end
-@@ -650,6 +795,29 @@ module riscv_id_stage
+@@ -650,6 +852,29 @@ module riscv_id_stage
      endcase; // case (operand_c_fw_mux_sel)
    end
  
@@ -20119,7 +20271,7 @@ index 01389e1..291b0f7 100644
  
    ///////////////////////////////////////////////////////////////////////////
    //  ___                              _ _       _              ___ ____   //
-@@ -681,7 +849,6 @@ module riscv_id_stage
+@@ -681,7 +906,6 @@ module riscv_id_stage
  
    assign imm_vec_ext_id = imm_vu_type[1:0];
  
@@ -20127,7 +20279,7 @@ index 01389e1..291b0f7 100644
    always_comb
    begin
      unique case (mult_imm_mux)
-@@ -699,6 +866,7 @@ module riscv_id_stage
+@@ -699,6 +923,7 @@ module riscv_id_stage
    // |_| \_\_____\____|___|____/ |_| |_____|_| \_\____/  //
    //                                                     //
    /////////////////////////////////////////////////////////
@@ -20135,7 +20287,7 @@ index 01389e1..291b0f7 100644
    riscv_register_file  registers_i
    (
      .clk          ( clk                ),
-@@ -731,6 +899,46 @@ module riscv_id_stage
+@@ -731,6 +956,46 @@ module riscv_id_stage
  
    assign dbg_reg_rdata_o = regfile_data_rc_id;
  
@@ -20182,7 +20334,7 @@ index 01389e1..291b0f7 100644
  
    ///////////////////////////////////////////////
    //  ____  _____ ____ ___  ____  _____ ____   //
-@@ -814,8 +1022,143 @@ module riscv_id_stage
+@@ -814,8 +1079,154 @@ module riscv_id_stage
      .jump_in_dec_o                   ( jump_in_dec               ),
      .jump_in_id_o                    ( jump_in_id                ),
      .jump_target_mux_sel_o           ( jump_target_mux_sel       )
@@ -20202,7 +20354,7 @@ index 01389e1..291b0f7 100644
 +  (
 +    .instr_rdata_i                   ( instr                     ),
 +    .tpr_i                           ( tpr_i                     ),
-+
+ 
 +    // jump/branches
 +    .alu_operator_o_mode             ( alu_operator_mode         ),
 +    .register_set_o                  ( register_set_tag          ),
@@ -20212,8 +20364,19 @@ index 01389e1..291b0f7 100644
 +    `ifdef DIFT_H
 +    ,
 +    .thr_i                           ( thr_i                     ),
++    // Control signals for EX/LSU stages
 +    .memory_set_hierarchy_o          ( memory_set_hierarchy      ),
-+    .hierarchy_tag_o                 ( hierarchy_tag             )
++    .register_set_hierarchy_o        ( register_set_hierarchy    ), // To pipeline
++    .thr_set_hierarchy_o             ( thr_set_hierarchy         ),
++    .thr_apply_o                     ( thr_apply                 ),
++    .thr_from_reg_o                  ( thr_from_reg              ),
++
++    // New Hierarchy tag
++    .hierarchy_tag_o                 ( hierarchy_tag             ),
++
++    // Hierarchy violation signal
++    .hierarchy_violation_o           ( hierarchy_violation       )
++    
 +    `endif
 +  );
 +`endif
@@ -20241,9 +20404,9 @@ index 01389e1..291b0f7 100644
 +    .is_store_o                      ( is_store                  ),
 +    .enable_a_o                      ( enable_a                  ),
 +    .enable_b_o                      ( enable_b                  )
-+  );
+   );
 +`endif
- 
++
 +  ///////////////////////////////////////////////////////////////////////
 +  //   _     ___    _    ____                                          //
 +  //  | |   / _ \  / \  |  _ \                                         //
@@ -20268,7 +20431,7 @@ index 01389e1..291b0f7 100644
 +    .tpr_i                           ( tpr_i                     ),
 +    .regfile_dest_tag                ( regfile_dest_tag          ),
 +    .regfile_enable_tag              ( regfile_enable_tag        )
-   );
++  );
 +`endif
 +
 +  ///////////////////////////////////////////////////////////////
@@ -20319,14 +20482,14 @@ index 01389e1..291b0f7 100644
 +`endif
 +
 +`ifdef DIFT
-+  assign illegal_insn_dec_dift = illegal_insn_dec | exception_tag | exception_i_tag | (execute_pc_tag & pc_id_i_tag);
++  assign illegal_insn_dec_dift = illegal_insn_dec | exception_tag | exception_i_tag | (execute_pc_tag & pc_id_i_tag) | hierarchy_violation;
 +`else
 +  assign illegal_insn_dec_dift = illegal_insn_dec;
 +`endif
  
    ////////////////////////////////////////////////////////////////////
    //    ____ ___  _   _ _____ ____   ___  _     _     _____ ____    //
-@@ -837,7 +1180,7 @@ module riscv_id_stage
+@@ -837,7 +1248,7 @@ module riscv_id_stage
  
      // decoder related signals
      .deassert_we_o                  ( deassert_we            ),
@@ -20335,7 +20498,7 @@ index 01389e1..291b0f7 100644
      .eret_insn_i                    ( eret_insn_dec          ),
      .pipe_flush_i                   ( pipe_flush_dec         ),
  
-@@ -855,6 +1198,9 @@ module riscv_id_stage
+@@ -855,6 +1266,9 @@ module riscv_id_stage
      // to prefetcher
      .pc_set_o                       ( pc_set_o               ),
      .pc_mux_o                       ( pc_mux_o               ),
@@ -20345,7 +20508,7 @@ index 01389e1..291b0f7 100644
  
      // LSU
      .data_req_ex_i                  ( data_req_ex_o          ),
-@@ -866,6 +1212,9 @@ module riscv_id_stage
+@@ -866,6 +1280,9 @@ module riscv_id_stage
  
      // jump/branch control
      .branch_taken_ex_i              ( branch_taken_ex        ),
@@ -20355,7 +20518,7 @@ index 01389e1..291b0f7 100644
      .jump_in_id_i                   ( jump_in_id             ),
      .jump_in_dec_i                  ( jump_in_dec            ),
  
-@@ -957,10 +1306,10 @@ module riscv_id_stage
+@@ -957,10 +1374,10 @@ module riscv_id_stage
      .irq_i                ( irq_i            ),
      .irq_enable_i         ( irq_enable_i     ),
  
@@ -20370,7 +20533,7 @@ index 01389e1..291b0f7 100644
  
      .lsu_load_err_i       ( lsu_load_err_i   ),
      .lsu_store_err_i      ( lsu_store_err_i  ),
-@@ -971,7 +1320,6 @@ module riscv_id_stage
+@@ -971,7 +1388,6 @@ module riscv_id_stage
      .dbg_settings_i       ( dbg_settings_i   )
    );
  
@@ -20378,7 +20541,7 @@ index 01389e1..291b0f7 100644
    //////////////////////////////////////////////////////////////////////////
    //          ____ ___  _   _ _____ ____   ___  _     _     _____ ____    //
    //         / ___/ _ \| \ | |_   _|  _ \ / _ \| |   | |   | ____|  _ \   //
-@@ -1070,7 +1418,6 @@ module riscv_id_stage
+@@ -1070,7 +1486,6 @@ module riscv_id_stage
        pc_ex_o                     <= '0;
  
        branch_in_ex_o              <= 1'b0;
@@ -20386,7 +20549,7 @@ index 01389e1..291b0f7 100644
      end
      else if (data_misaligned_i) begin
        // misaligned data access case
-@@ -1101,14 +1448,14 @@ module riscv_id_stage
+@@ -1101,14 +1516,14 @@ module riscv_id_stage
        begin // unstall the whole pipeline
          if (~mult_en)
          begin // only change those registers when we actually need to
@@ -20409,7 +20572,7 @@ index 01389e1..291b0f7 100644
          end
  
          mult_en_ex_o                <= mult_en;
-@@ -1183,12 +1530,93 @@ module riscv_id_stage
+@@ -1183,12 +1598,108 @@ module riscv_id_stage
      end
    end
  
@@ -20430,8 +20593,13 @@ index 01389e1..291b0f7 100644
 +      is_store_post_o_tag         <= '0;
 +      memory_set_o_tag            <= '0;
 +    `ifdef DIFT_H
-+      memory_hierarchy_set_o_tag  <= '0;
-+      hierarchy_o_tag             <= '0;
++      is_store_o                  <= '0;
++      memory_set_hierarchy_o      <= '0;
++      register_set_hierarchy_o    <= '0;
++      thr_set_hierarchy_o         <= '0;
++      thr_apply_o                 <= '0;
++      thr_from_reg_o              <= '0;
++      hierarchy_tag_o             <= '0;
 +    `endif  
 +      regfile_alu_waddr_ex_o_tag  <= '0;
 +      store_dest_addr_ex_o_tag    <= '0;
@@ -20457,8 +20625,18 @@ index 01389e1..291b0f7 100644
 +          is_store_post_o_tag           <= is_store_post_tag;
 +          memory_set_o_tag              <= memory_set_tag;
 +          `ifdef DIFT_H
-+          memory_hierarchy_set_o_tag    <= memory_set_hierarchy;
-+          hierarchy_o_tag               <= hierarchy_tag;
++          is_store_o                    <= is_store;
++            memory_set_hierarchy_o      <= memory_set_hierarchy;
++            register_set_hierarchy_o    <= register_set_hierarchy;
++            thr_set_hierarchy_o         <= thr_set_hierarchy;
++            thr_apply_o                 <= thr_apply;
++            thr_from_reg_o              <= thr_from_reg;
++            if (thr_from_reg) begin
++              // Only true if in jarl, tag comes from register file
++              hierarchy_tag_o             <= jump_target_tag[2:1];
++            end else begin
++              hierarchy_tag_o             <= hierarchy_tag;
++            end
 +          `endif
 +          if (is_store) begin
 +            if (enable_a) begin
@@ -20882,7 +21060,7 @@ index 7a83e27..669ca58 100644
  
 diff --git a/load_check.sv b/load_check.sv
 new file mode 100644
-index 0000000..29811c9
+index 0000000..cd12404
 --- /dev/null
 +++ b/load_check.sv
 @@ -0,0 +1,74 @@
@@ -20953,7 +21131,7 @@ index 0000000..29811c9
 +  always_comb
 +  begin 
 +    `ifdef DIFT_H
-+      exception_o = exception_o_h;
++      exception_o = exception_o_h | exception_o_tag;
 +    `else
 +      exception_o = exception_o_tag;
 +    `endif
@@ -21027,7 +21205,7 @@ index 0000000..f5cbdeb
 +
 +endmodule
 diff --git a/load_store_unit.sv b/load_store_unit.sv
-index 9383ad8..b871407 100644
+index 9383ad8..b48d9fa 100644
 --- a/load_store_unit.sv
 +++ b/load_store_unit.sv
 @@ -23,6 +23,7 @@
@@ -21063,7 +21241,7 @@ index 9383ad8..b871407 100644
  
 +`ifdef DIFT
 +  logic         data_we_q_tag;               // Activation d'écriture pour les tags
-+  logic [3:0]   rdata_q_tag;                 // Maintient de la valeurs des 4 premiers tags
++  logic [3:0]   rdata_q_tag;                 // Maintien de la valeur des 4 premiers tags
 +
 +`ifdef DIFT_H
 +  logic [2:0]   rdata_offset_q_tag;          // Adresse de sélection des bits de tags à lire
@@ -21117,7 +21295,7 @@ index 9383ad8..b871407 100644
 +    begin
 +      data_type_q_tag    <= data_type_ex_i;
 +      data_we_q_tag      <= data_we_ex_i_tag;
-+`ifdef DIFT_H_ca_marche_pas
++`ifdef DIFT_H
 +      rdata_offset_q_tag <= data_addr_int[2:0];
 +`else
 +      rdata_offset_q_tag <= data_addr_int[1:0];
@@ -21151,14 +21329,13 @@ index 9383ad8..b871407 100644
        end
      end
    end
-@@ -321,12 +369,251 @@ module riscv_load_store_unit
+@@ -321,12 +369,253 @@ module riscv_load_store_unit
    // output to register file
    assign data_rdata_ex_o = (data_rvalid_i == 1'b1) ? data_rdata_ext : rdata_q;
  
 +`ifdef DIFT
 +  
 +`ifdef DIFT_H
-+  assign data_rdata_ex_o_htag = 2'b00;
 +  logic [5:0] data_rdata_ext_tag;
 +
 +  logic [5:0] rdata_w_ext_tag;
@@ -21387,6 +21564,9 @@ index 9383ad8..b871407 100644
 +`endif
 +
 +  assign data_rdata_ex_o_tag = (data_rvalid_i_tag == 1'b1) ? |data_rdata_ext_tag : rdata_q_tag;
++  `ifdef DIFT_H
++  assign data_rdata_ex_o_htag = data_rdata_i_tag[5:4];
++  `endif
 +`endif
 +
    // output to data interface
@@ -22040,10 +22220,10 @@ index 0000000..fd2e95b
 +endmodule
 diff --git a/mode_tag.sv b/mode_tag.sv
 new file mode 100644
-index 0000000..028da9e
+index 0000000..909a125
 --- /dev/null
 +++ b/mode_tag.sv
-@@ -0,0 +1,284 @@
+@@ -0,0 +1,365 @@
 +////////////////////////////////////////////////////////////////////////////////
 +// Engineer        Christian Palmiero - cp3025@columbia.edu                   //
 +//                                                                            //
@@ -22054,6 +22234,10 @@ index 0000000..028da9e
 +// Description:    Mode decoder                                               //
 +//                 This unit reads the MODE field of the Tag Propagation      //
 +//                 Register and sends the proper signals to the EX stage      //
++//                                                                            //
++// 2025-Mod:       When decoding hierarchy-related instruction, this units    //
++//                 also checks if the instruction can be used in the current  //
++//                 security level.                                            //
 +//                                                                            //
 +////////////////////////////////////////////////////////////////////////////////
 +
@@ -22077,20 +22261,38 @@ index 0000000..028da9e
 +
 +  `ifdef DIFT_H
 +  ,
-+  input  logic [31:0]               thr_i,
-+  output logic                      memory_set_hierarchy_o,
-+  output logic [1:0]                hierarchy_tag_o
++  input  logic [31:0]               thr_i,                    // Tag Hierarchy Register
++  output logic                      memory_set_hierarchy_o,   // Must set h-tag on designated memory address [To LSU]
++  output logic                      register_set_hierarchy_o, // Must set h-tag on designated register       [To EX]
++  output logic                      thr_set_hierarchy_o,      // Must set h-tag as next thr value            [To CSR]
++  output logic                      thr_apply_o,              // Must apply the pending thr change           [To CSR]
++  output logic                      thr_from_reg_o,           // Use the rs1 register h-tag as new thr value [To CSR]
++  output logic [1:0]                hierarchy_tag_o,          // The h-tag                                   [To CSR/EX/LSU]
++  output logic                      hierarchy_violation_o     // Illegal use of hierarchy instructions
 +  `endif
 +);
 +
++  logic       hierarchy_insn; // Indicates that a hierarchy instruction is decoded
++  logic [1:0] hierarchy_next; // Future hierarchy level
++  
 +  always_comb
 +  begin
 +    alu_operator_o_mode          = ALU_MODE_OLD;
 +    register_set_o               = 1'b0;
 +    memory_set_o                 = 1'b0;
 +    is_store_post_o              = 1'b0;
++    
++  `ifdef DIFT_H
 +    memory_set_hierarchy_o       = 1'b0; 
++    register_set_hierarchy_o     = 1'b0; 
++    thr_set_hierarchy_o          = 1'b0; 
++    thr_apply_o                  = 1'b0; 
++    thr_from_reg_o               = 1'b0;
++ 
 +    hierarchy_tag_o              = 2'b00;
++    hierarchy_insn               = 1'b0;
++    hierarchy_next               = 2'b00;
++  `endif
 +
 +    unique case (instr_rdata_i[6:0])
 +
@@ -22103,9 +22305,34 @@ index 0000000..028da9e
 +      //                            //
 +      ////////////////////////////////
 +
-+      OPCODE_JAL,
-+      OPCODE_JALR: begin   // Jump and Link
++      OPCODE_JAL: begin   // Jump and Link
 +        alu_operator_o_mode  = tpr_i[JUMP_HIGH:JUMP_LOW];
++        `ifdef DIFT_H
++        thr_apply_o = 1'b1;
++
++        // Marque ra avec la valeur actuelle de thr
++        hierarchy_tag_o <= instr_rdata_i[21:20];  // Next thr is imm[1:0]
++        register_set_hierarchy_o = 1'b1;          // Mark register
++        register_set_o = 1'b1;
++        `endif
++      end
++      
++      OPCODE_JALR: begin   // Jump and Link Register
++        alu_operator_o_mode  = tpr_i[JUMP_HIGH:JUMP_LOW];
++        `ifdef DIFT_H
++        // [Désactivé]
++        // La fonctionnalité de changement de niveau de sécurité lors d'un 
++        // jarl a été désactivée. Cette fonctionnalité suppose que l'on peut 
++        // stocker et récupérer les tags hiérarchiques vers et depuis la mémoire.
++        // Le fait est que dans l'état actuel, c'est chose impossible. 
++
++        // thr_from_reg_o = 1'b1;
++
++        // Marque ra avec la valeur actuelle de thr
++        hierarchy_tag_o <= instr_rdata_i[21:20];  // Next thr is imm[1:0]
++        register_set_hierarchy_o = 1'b1;          // Mark register
++        register_set_o = 1'b1;
++        `endif
 +      end
 +
 +     //////////////////////////////////////////////
@@ -22287,15 +22514,23 @@ index 0000000..028da9e
 +          endcase
 +      end
 +
++      `ifdef DIFT
 +      OPCODE_DIFT_STORE: begin
 +
 +        unique case (instr_rdata_i[13:12])
-+
++          `ifdef DIFT_H
 +          2'b11: begin
++            `ifdef DIFT_H
 +            // p.hmem
 +            memory_set_hierarchy_o = 1'b1;
 +            hierarchy_tag_o <= thr_i[1:0];
++
++            // Internal signals for violation check
++            hierarchy_next <= thr_i[1:0];
++            hierarchy_insn = 1'b1;
++            `endif
 +          end
++          `endif
 +
 +          default: begin
 +            // p.sps{w,h,b} 
@@ -22305,17 +22540,32 @@ index 0000000..028da9e
 +        endcase
 +
 +      end
++      `endif
 +
 +      OPCODE_DIFT_IMM : begin
 +
 +        unique case (instr_rdata_i[14:12])
 +          3'b000: register_set_o = 1'b1; // p.set
-+          3'b001: begin
-+            
-+          end
-+          3'b010: begin
++        `ifdef DIFT_H 
++          3'b001: begin                  // p.hmark
++            hierarchy_tag_o <= instr_rdata_i[21:20];  // Next thr is imm[1:0]
++            register_set_hierarchy_o = 1'b1;          // Mark register
++            register_set_o = 1'b1;
 +
++            // Internal signals for violation check
++            hierarchy_next  <= instr_rdata_i[21:20];
++            hierarchy_insn = 1'b1;
 +          end
++
++          3'b010: begin                  // p.hset
++            hierarchy_tag_o <= instr_rdata_i[21:20];  // Next thr is imm[1:0]
++            thr_set_hierarchy_o = 1'b1;          // Mark register
++
++            // Internal signals for violation check
++            hierarchy_next  <= instr_rdata_i[21:20];
++            hierarchy_insn = 1'b1;
++          end
++        `endif
 +          default: begin
 +            // Rien
 +          end
@@ -22326,6 +22576,17 @@ index 0000000..028da9e
 +      default: ;
 +    endcase
 +  end
++
++
++  `ifdef DIFT_H
++  riscv_hierarchy_check hierarchy_check_i
++  (
++    .thr_i                        (thr_i),
++    .cmp_i                        (hierarchy_next),
++    .activate_hierarchy_check_i   (hierarchy_insn),
++    .exception_o                  (hierarchy_violation_o)
++  );
++  `endif
 +
 +endmodule
 diff --git a/mult.sv b/mult.sv
@@ -22645,7 +22906,7 @@ index 0000000..73a901c
 +
 +endmodule
 diff --git a/riscv_core.sv b/riscv_core.sv
-index 863e074..497d651 100644
+index 863e074..05d8ede 100644
 --- a/riscv_core.sv
 +++ b/riscv_core.sv
 @@ -84,6 +84,19 @@ module riscv_core
@@ -22668,7 +22929,7 @@ index 863e074..497d651 100644
  );
  
    localparam N_HWLP      = 2;
-@@ -258,6 +271,43 @@ module riscv_core
+@@ -258,6 +271,55 @@ module riscv_core
    logic        perf_jr_stall;
    logic        perf_ld_stall;
  
@@ -22682,13 +22943,21 @@ index 863e074..497d651 100644
 +  logic        jump_target_ex_tag;
 +  logic        pc_set_tag;
 +  logic        pc_id_tag;
++`ifdef DIFT_H
++  logic [2:0]  regfile_alu_wdata_fw_tag;
++`else
 +  logic        regfile_alu_wdata_fw_tag;
++`endif
 +  logic        regfile_alu_we_fw_tag;
 +  logic        pc_enable_tag;
 +  logic        rs1_tag;
 +  logic        exception_tag;
 +  logic [ALU_MODE_WIDTH-1:0] alu_operator_mode;
++`ifdef DIFT_H
++  logic [2:0]  alu_operand_a_tag;
++`else
 +  logic        alu_operand_a_tag;
++`endif
 +  logic        alu_operand_b_tag;
 +  logic        alu_operand_c_tag;
 +  logic        data_we_ex_tag;
@@ -22705,14 +22974,18 @@ index 863e074..497d651 100644
 +  logic        store_source_tag;
 +  logic        use_store_ops;
 +  `ifdef DIFT_H
-+  logic memory_set_hierarchy;
++  logic memory_set_hierarchy_id_o;
++  logic register_set_hierarchy_id_o;
++  logic thr_set_hierarchy_id_o;
++  logic thr_apply_id_o;
++  logic thr_from_reg_id_o;
 +  logic [1:0] hierarchy_tag_id_o;
 +  `endif
 +`endif
  
    //////////////////////////////////////////////////////////////////////////////////////////////
    //   ____ _            _      __  __                                                   _    //
-@@ -367,6 +417,13 @@ module riscv_core
+@@ -367,6 +429,13 @@ module riscv_core
  
      .if_busy_o           ( if_busy           ),
      .perf_imiss_o        ( perf_imiss        )
@@ -22726,7 +22999,7 @@ index 863e074..497d651 100644
    );
  
  
-@@ -535,6 +592,44 @@ module riscv_core
+@@ -535,6 +604,49 @@ module riscv_core
      .perf_jump_o                  ( perf_jump            ),
      .perf_jr_stall_o              ( perf_jr_stall        ),
      .perf_ld_stall_o              ( perf_ld_stall        )
@@ -22763,15 +23036,20 @@ index 863e074..497d651 100644
 +    .is_store_post_o_tag          ( is_store_post_tag        ),
 +    .memory_set_o_tag             ( memory_set_tag           ),
 +`ifdef DIFT_H
-+    .memory_hierarchy_set_o_tag   ( memory_set_hierarchy ),
-+    .hierarchy_o_tag              ( hierarchy_tag_id_o   ),
++    .is_store_o                   ( is_store                 ),
++    .memory_set_hierarchy_o       ( memory_set_hierarchy_id_o ),
++    .register_set_hierarchy_o     ( register_set_hierarchy_id_o ),          
++    .thr_set_hierarchy_o          ( thr_set_hierarchy_id_o ),               
++    .thr_apply_o                  ( thr_apply_id_o ),                     
++    .thr_from_reg_o               ( thr_from_reg_id_o ),          
++    .hierarchy_tag_o              ( hierarchy_tag_id_o   ),
 +`endif
 +    .regfile_alu_waddr_ex_o_tag   ( regfile_alu_waddr_tag    )
 +`endif
    );
  
  
-@@ -609,6 +704,33 @@ module riscv_core
+@@ -609,6 +721,39 @@ module riscv_core
      .ex_ready_o                 ( ex_ready                     ),
      .ex_valid_o                 ( ex_valid                     ),
      .wb_ready_i                 ( lsu_ready_wb                 )
@@ -22800,12 +23078,18 @@ index 863e074..497d651 100644
 +    .data_wdata_ex_o_tag        ( data_wdata_ex_tag            ),
 +    .data_we_ex_o_tag           ( data_we_ex_tag               ),
 +    .rs1_o_tag                  ( rs1_tag                      ),
++  `ifdef DIFT_H
++    .hierarchy_forward_to_reg   ( register_set_hierarchy_id_o ),
++    .hierarchy_tag              ( hierarchy_tag_id_o     ),
++    .thr_i                      ( thr ),
++    .is_store_i                 ( is_store                     ),
++  `endif 
 +    .exception_o_tag            ( exception_tag                )
 +`endif
    );
  
  
-@@ -664,6 +786,21 @@ module riscv_core
+@@ -664,6 +809,21 @@ module riscv_core
  
      .ex_valid_i            ( ex_valid           ),
      .busy_o                ( lsu_busy           )
@@ -22827,7 +23111,7 @@ index 863e074..497d651 100644
    );
  
    assign wb_valid = lsu_ready_wb;
-@@ -740,6 +877,15 @@ module riscv_core
+@@ -740,6 +900,20 @@ module riscv_core
      .mem_store_i             ( data_req_o & data_gnt_i & data_we_o    ),
  
      .ext_counters_i          ( ext_perf_counters_i                    )
@@ -22837,7 +23121,12 @@ index 863e074..497d651 100644
 +    .tcr_o                   ( tcr                                    )
 +`ifdef DIFT_H
 +    ,
-+    .thr_o                   ( thr                                    )
++    .thr_o                   ( thr                                    ),
++   
++    .thr_set_hierarchy_i     ( thr_set_hierarchy_id_o ),               
++    .thr_apply_i             ( thr_apply_id_o ),                     
++    .thr_from_reg_i          ( thr_from_reg_id_o ),          
++    .hierarchy_tag_i         ( hierarchy_tag_id_o   )
 +`endif
 +`endif
    );
@@ -22895,10 +23184,10 @@ index 621a43d..f1f79bb 100644
 -
 diff --git a/tag_check_logic.sv b/tag_check_logic.sv
 new file mode 100644
-index 0000000..3881307
+index 0000000..7b01a5e
 --- /dev/null
 +++ b/tag_check_logic.sv
-@@ -0,0 +1,42 @@
+@@ -0,0 +1,50 @@
 +////////////////////////////////////////////////////////////////////////////////
 +// Engineer        Christian Palmiero - cp3025@columbia.edu                   //
 +//                                                                            //
@@ -22913,6 +23202,7 @@ index 0000000..3881307
 +////////////////////////////////////////////////////////////////////////////////
 +
 +import riscv_defines::*;
++`include "riscv_config.sv"
 +
 +module riscv_tag_check_logic
 +(
@@ -22925,6 +23215,13 @@ index 0000000..3881307
 +  input  logic  is_load_i,
 +
 +  output logic  exception_o
++
++  `ifdef DIFT_H
++  ,
++  input  logic       is_store_i,
++  input  logic [1:0] thr_i,                    // thr register
++  input  logic [1:0] regfile_wdata_wb_i_htag  // M[RS1+offset]: source hierarchic tag
++  `endif
 +);
 +
 +  always_comb
