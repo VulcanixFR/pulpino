@@ -22220,7 +22220,7 @@ index 0000000..fd2e95b
 +endmodule
 diff --git a/mode_tag.sv b/mode_tag.sv
 new file mode 100644
-index 0000000..909a125
+index 0000000..97d8401
 --- /dev/null
 +++ b/mode_tag.sv
 @@ -0,0 +1,365 @@
@@ -22311,7 +22311,7 @@ index 0000000..909a125
 +        thr_apply_o = 1'b1;
 +
 +        // Marque ra avec la valeur actuelle de thr
-+        hierarchy_tag_o <= instr_rdata_i[21:20];  // Next thr is imm[1:0]
++        hierarchy_tag_o <= thr_i[1:0];            // Next thr is thr[1:0]
 +        register_set_hierarchy_o = 1'b1;          // Mark register
 +        register_set_o = 1'b1;
 +        `endif
@@ -22329,7 +22329,7 @@ index 0000000..909a125
 +        // thr_from_reg_o = 1'b1;
 +
 +        // Marque ra avec la valeur actuelle de thr
-+        hierarchy_tag_o <= instr_rdata_i[21:20];  // Next thr is imm[1:0]
++        hierarchy_tag_o <= thr_i[1:0];            // Next thr is thr[1:0]
 +        register_set_hierarchy_o = 1'b1;          // Mark register
 +        register_set_o = 1'b1;
 +        `endif
